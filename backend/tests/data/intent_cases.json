@@ -1,0 +1,24 @@
+{
+  "_note": "Rule regression cases written by the VoxShield developers. They guard the transparent rules against regressions. They are NOT a sample of real calls and say nothing about real-world accuracy.",
+  "cases": [
+    {"id": "scam-otp-secrecy", "text": "Please read me the one time password we just sent you, and do not tell anyone about this call, it is urgent.", "expect_risk": ["high"], "expect_categories": ["credential_request", "secrecy_isolation"]},
+    {"id": "scam-police-payment", "text": "This is the police department. A warrant has been issued, you must transfer two thousand dollars right now or you will be arrested.", "expect_risk": ["high"], "expect_categories": ["coercion_threat", "payment_pressure"]},
+    {"id": "scam-gift-cards", "text": "You need to go and buy gift cards from the store and read me the numbers on the back, and please stay on the line while you do it.", "expect_risk": ["elevated", "high"], "expect_categories": ["payment_pressure"]},
+    {"id": "scam-remote-access", "text": "To fix the problem with your computer you should install AnyDesk now and give me remote access to your computer so I can check it.", "expect_risk": ["elevated", "high"], "expect_categories": ["remote_access"]},
+    {"id": "scam-grandchild", "text": "Grandma it's me, your grandson. I'm in jail and I need you to send me money, please don't tell mom and dad about this.", "expect_risk": ["elevated", "high"], "expect_categories": ["impersonation", "secrecy_isolation"]},
+    {"id": "scam-bypass-verify", "text": "There is no need to call your bank, we are the bank and your account has been compromised, so read me your card number now.", "expect_risk": ["high"], "expect_categories": ["verification_bypass", "credential_request"]},
+    {"id": "benign-parcel", "text": "Hi, your parcel will arrive on Tuesday afternoon between two and four, please be home to sign for it, thank you very much.", "expect_risk": ["none_detected"], "expect_categories": []},
+    {"id": "benign-bank-visit", "text": "I went to the bank this morning to pay in some money and the cashier was quick, so I was home in good time for lunch.", "expect_risk": ["none_detected"], "expect_categories": []},
+    {"id": "benign-otp-login", "text": "My bank texted me a one time password and I used it to log in to the app without any problem at all today.", "expect_risk": ["none_detected"], "expect_categories": []},
+    {"id": "benign-police-report", "text": "I called the police yesterday to report my stolen bike and they were really helpful with the paperwork and the forms.", "expect_risk": ["none_detected"], "expect_categories": []},
+    {"id": "benign-bank-statement", "text": "Hi, this is Sarah from the bank. Your statement is ready and you can view it in the app whenever you like, no action needed.", "expect_risk": ["weak_signals"], "expect_categories": ["impersonation"]},
+    {"id": "benign-friend-money", "text": "I need money for rent this month, can you lend me some, I will pay you back on Friday when I get paid, thanks.", "expect_risk": ["weak_signals"], "expect_categories": ["payment_pressure"]},
+    {"id": "benign-meeting", "text": "We need to finish the quarterly report today so please send it over as soon as you can and I will review it this afternoon.", "expect_risk": ["none_detected", "weak_signals"], "expect_categories": []},
+    {"id": "negated-otp-advice", "text": "The bank will never ask you to share your OTP, so if anyone calls and asks for it please hang up and tell us.", "expect_risk": ["none_detected", "weak_signals"], "expect_categories": []},
+    {"id": "negated-pin-reminder", "text": "Do not share your PIN with anyone. Our staff will never call you for it. This is a reminder from your bank branch today.", "expect_risk": ["none_detected"], "expect_categories": []},
+    {"id": "quoted-scam-recounted", "text": "My grandmother got a call where the man said, read me your one time password, and she hung up on him luckily.", "expect_risk": ["weak_signals"], "expect_categories": []},
+    {"id": "quoted-threat-recounted", "text": "He said you must transfer five hundred dollars right now or you will be arrested, and I told him to get lost.", "expect_risk": ["weak_signals"], "expect_categories": []},
+    {"id": "quoted-email", "text": "The email literally says \"send me your password right now\" and I deleted it without clicking on anything at all.", "expect_risk": ["weak_signals"], "expect_categories": []},
+    {"id": "awareness-talk", "text": "Scammers often say don't tell your family and buy gift cards immediately. Here is how to spot those calls and stay safe.", "expect_risk": ["weak_signals"], "expect_categories": []}
+  ]
+}

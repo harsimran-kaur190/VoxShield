@@ -1,0 +1,9 @@
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.env
+tests
+evaluation
+scripts
+!scripts/download_models.py

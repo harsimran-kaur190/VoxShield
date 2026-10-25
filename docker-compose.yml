@@ -1,0 +1,32 @@
+# Self-hosted VoxShield on one machine: the web app on port 8080, which forwards /api to the backend.
+#   docker compose up --build
+# The backend is not published to the host, so everything goes through the web container (same origin, no CORS).
+services:
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      # nginx is the only thing that can reach the backend, so its forwarded client address can be trusted.
+      FORWARDED_ALLOW_IPS: "*"
+      VOXSHIELD_RATE_LIMIT_PER_MINUTE: "20"
+    mem_limit: 5g
+    # Audio is written to a temporary folder and deleted after analysis; keeping /tmp in memory means it never reaches disk.
+    tmpfs:
+      - /tmp:size=256m
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=4)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 90s
+      retries: 3
+
+  web:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8080:80"

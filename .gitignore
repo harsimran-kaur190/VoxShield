@@ -1,0 +1,68 @@
+# ---- Secrets and local configuration ----
+# Only the *.example templates are meant to be committed.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---- Python (backend) ----
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+
+# ---- Node (frontend) ----
+node_modules/
+dist/
+dist-ssr/
+*.local
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+.vite/
+
+# ---- AI models and caches (downloaded on demand, never committed) ----
+hf-cache/
+.cache/
+*.safetensors
+*.onnx
+*.pt
+*.pth
+*.ckpt
+*.gguf
+
+# ---- Generated evaluation data (rebuilt by evaluation/run_eval.py) ----
+backend/evaluation/cache/
+
+# ---- User audio and transcripts: never commit real recordings ----
+# The one tiny public-domain test clip is allowed explicitly.
+*.wav
+*.mp3
+*.m4a
+*.ogg
+*.flac
+*.aiff
+!backend/tests/fixtures/jfk.flac
+
+# ---- Deployment tooling ----
+.vercel/
+.docker/
+
+# ---- Logs, OS, editors ----
+*.log
+logs/
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo

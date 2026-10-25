@@ -1,0 +1,366 @@
+{
+  "split": "dev",
+  "rules": {
+    "n": 75,
+    "positives": 33,
+    "negatives": 42,
+    "confusion": {
+      "tp": 16,
+      "fp": 3,
+      "fn": 17,
+      "tn": 39
+    },
+    "call_level": {
+      "precision": 0.842,
+      "recall": 0.485,
+      "f1": 0.615,
+      "accuracy": 0.733
+    },
+    "category_level_micro": {
+      "precision": 0.886,
+      "recall": 0.494,
+      "f1": 0.634,
+      "tp": 39,
+      "fp": 5,
+      "fn": 40
+    },
+    "risk_levels": {
+      "high": 5,
+      "weak_signals": 14,
+      "elevated": 14,
+      "none_detected": 38,
+      "inconclusive": 4
+    },
+    "inconclusive": 4,
+    "per_kind": {
+      "benign_everyday": {
+        "correct": 5
+      },
+      "benign_financial": {
+        "correct": 6,
+        "wrong": 1
+      },
+      "family_emergency": {
+        "correct": 3,
+        "wrong": 1
+      },
+      "hypothetical": {
+        "wrong": 2,
+        "correct": 3
+      },
+      "incomplete": {
+        "wrong": 1,
+        "correct": 4
+      },
+      "legit_urgent": {
+        "correct": 6
+      },
+      "negated": {
+        "correct": 6
+      },
+      "otp_credentials": {
+        "wrong": 3,
+        "correct": 2
+      },
+      "quoted_recounted": {
+        "correct": 7
+      },
+      "remote_access": {
+        "correct": 2,
+        "wrong": 2
+      },
+      "secrecy_impersonation": {
+        "correct": 5
+      },
+      "transcription_errors": {
+        "wrong": 3,
+        "correct": 3
+      },
+      "urgent_payment": {
+        "correct": 3,
+        "wrong": 2
+      },
+      "verification_bypass": {
+        "wrong": 5
+      }
+    },
+    "errors": [
+      {
+        "id": "dev-002",
+        "kind": "urgent_payment",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "dev-003",
+        "kind": "urgent_payment",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "dev-006",
+        "kind": "otp_credentials",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "dev-009",
+        "kind": "otp_credentials",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "dev-010",
+        "kind": "otp_credentials",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "dev-011",
+        "kind": "verification_bypass",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "dev-012",
+        "kind": "verification_bypass",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "dev-013",
+        "kind": "verification_bypass",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "dev-014",
+        "kind": "verification_bypass",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "dev-015",
+        "kind": "verification_bypass",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "dev-022",
+        "kind": "remote_access",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "dev-024",
+        "kind": "remote_access",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "dev-026",
+        "kind": "family_emergency",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "dev-030",
+        "kind": "benign_financial",
+        "error": "false_positive",
+        "risk": "elevated"
+      },
+      {
+        "id": "dev-048",
+        "kind": "hypothetical",
+        "error": "false_positive",
+        "risk": "elevated"
+      },
+      {
+        "id": "dev-050",
+        "kind": "hypothetical",
+        "error": "false_positive",
+        "risk": "elevated"
+      },
+      {
+        "id": "dev-060",
+        "kind": "transcription_errors",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "dev-061",
+        "kind": "transcription_errors",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "dev-062",
+        "kind": "transcription_errors",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "dev-066",
+        "kind": "incomplete",
+        "error": "false_negative",
+        "risk": "inconclusive"
+      }
+    ]
+  },
+  "nli": {
+    "n": 75,
+    "positives": 33,
+    "negatives": 42,
+    "confusion": {
+      "tp": 30,
+      "fp": 7,
+      "fn": 3,
+      "tn": 35
+    },
+    "call_level": {
+      "precision": 0.811,
+      "recall": 0.909,
+      "f1": 0.857,
+      "accuracy": 0.867
+    },
+    "category_level_micro": {
+      "precision": 0.714,
+      "recall": 0.696,
+      "f1": 0.705,
+      "tp": 55,
+      "fp": 22,
+      "fn": 24
+    },
+    "risk_levels": {
+      "high": 15,
+      "weak_signals": 11,
+      "elevated": 22,
+      "inconclusive": 11,
+      "none_detected": 16
+    },
+    "inconclusive": 11,
+    "per_kind": {
+      "benign_everyday": {
+        "correct": 5
+      },
+      "benign_financial": {
+        "correct": 5,
+        "wrong": 2
+      },
+      "family_emergency": {
+        "correct": 4
+      },
+      "hypothetical": {
+        "correct": 5
+      },
+      "incomplete": {
+        "correct": 5
+      },
+      "legit_urgent": {
+        "correct": 6
+      },
+      "negated": {
+        "wrong": 3,
+        "correct": 3
+      },
+      "otp_credentials": {
+        "correct": 4,
+        "wrong": 1
+      },
+      "quoted_recounted": {
+        "correct": 5,
+        "wrong": 2
+      },
+      "remote_access": {
+        "correct": 4
+      },
+      "secrecy_impersonation": {
+        "correct": 5
+      },
+      "transcription_errors": {
+        "correct": 6
+      },
+      "urgent_payment": {
+        "correct": 4,
+        "wrong": 1
+      },
+      "verification_bypass": {
+        "wrong": 1,
+        "correct": 4
+      }
+    },
+    "errors": [
+      {
+        "id": "dev-003",
+        "kind": "urgent_payment",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "dev-007",
+        "kind": "otp_credentials",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "dev-011",
+        "kind": "verification_bypass",
+        "error": "false_negative",
+        "risk": "inconclusive"
+      },
+      {
+        "id": "dev-030",
+        "kind": "benign_financial",
+        "error": "false_positive",
+        "risk": "high"
+      },
+      {
+        "id": "dev-033",
+        "kind": "benign_financial",
+        "error": "false_positive",
+        "risk": "elevated"
+      },
+      {
+        "id": "dev-042",
+        "kind": "negated",
+        "error": "false_positive",
+        "risk": "elevated"
+      },
+      {
+        "id": "dev-043",
+        "kind": "negated",
+        "error": "false_positive",
+        "risk": "elevated"
+      },
+      {
+        "id": "dev-046",
+        "kind": "negated",
+        "error": "false_positive",
+        "risk": "elevated"
+      },
+      {
+        "id": "dev-054",
+        "kind": "quoted_recounted",
+        "error": "false_positive",
+        "risk": "elevated"
+      },
+      {
+        "id": "dev-055",
+        "kind": "quoted_recounted",
+        "error": "false_positive",
+        "risk": "elevated"
+      }
+    ],
+    "thresholds": {
+      "finding": 0.92,
+      "uncertain": 0.3,
+      "reported": 0.5
+    },
+    "latency_seconds": {
+      "mean": 0.363,
+      "median": 0.396,
+      "max": 0.732,
+      "mean_words": 24.7
+    }
+  }
+}

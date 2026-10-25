@@ -1,0 +1,1016 @@
+{
+  "split": "test",
+  "rules": {
+    "n": 93,
+    "positives": 42,
+    "negatives": 51,
+    "confusion": {
+      "tp": 16,
+      "fp": 3,
+      "fn": 26,
+      "tn": 48
+    },
+    "call_level": {
+      "precision": 0.842,
+      "recall": 0.381,
+      "f1": 0.525,
+      "accuracy": 0.688
+    },
+    "category_level_micro": {
+      "precision": 0.805,
+      "recall": 0.317,
+      "f1": 0.455,
+      "tp": 33,
+      "fp": 8,
+      "fn": 71
+    },
+    "risk_levels": {
+      "elevated": 16,
+      "none_detected": 52,
+      "weak_signals": 16,
+      "high": 3,
+      "inconclusive": 6
+    },
+    "inconclusive": 6,
+    "per_kind": {
+      "benign_everyday": {
+        "correct": 7
+      },
+      "benign_financial": {
+        "correct": 8
+      },
+      "family_emergency": {
+        "correct": 3,
+        "wrong": 2
+      },
+      "hypothetical": {
+        "correct": 6
+      },
+      "incomplete": {
+        "correct": 5,
+        "wrong": 2
+      },
+      "legit_urgent": {
+        "correct": 7
+      },
+      "negated": {
+        "wrong": 1,
+        "correct": 6
+      },
+      "otp_credentials": {
+        "wrong": 5,
+        "correct": 2
+      },
+      "quoted_recounted": {
+        "correct": 6,
+        "wrong": 2
+      },
+      "remote_access": {
+        "wrong": 3,
+        "correct": 2
+      },
+      "secrecy_impersonation": {
+        "wrong": 3,
+        "correct": 3
+      },
+      "transcription_errors": {
+        "wrong": 2,
+        "correct": 5
+      },
+      "urgent_payment": {
+        "correct": 2,
+        "wrong": 5
+      },
+      "verification_bypass": {
+        "wrong": 4,
+        "correct": 2
+      }
+    },
+    "errors": [
+      {
+        "id": "test-002",
+        "kind": "urgent_payment",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-003",
+        "kind": "urgent_payment",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "test-005",
+        "kind": "urgent_payment",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-006",
+        "kind": "urgent_payment",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-007",
+        "kind": "urgent_payment",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "test-008",
+        "kind": "otp_credentials",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-009",
+        "kind": "otp_credentials",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-010",
+        "kind": "otp_credentials",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-011",
+        "kind": "otp_credentials",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "test-013",
+        "kind": "otp_credentials",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-015",
+        "kind": "verification_bypass",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-017",
+        "kind": "verification_bypass",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-019",
+        "kind": "verification_bypass",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-020",
+        "kind": "verification_bypass",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-021",
+        "kind": "secrecy_impersonation",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "test-023",
+        "kind": "secrecy_impersonation",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-024",
+        "kind": "secrecy_impersonation",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "test-027",
+        "kind": "remote_access",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-029",
+        "kind": "remote_access",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-031",
+        "kind": "remote_access",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-033",
+        "kind": "family_emergency",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "test-034",
+        "kind": "family_emergency",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "test-052",
+        "kind": "negated",
+        "error": "false_positive",
+        "risk": "elevated"
+      },
+      {
+        "id": "test-067",
+        "kind": "quoted_recounted",
+        "error": "false_positive",
+        "risk": "elevated"
+      },
+      {
+        "id": "test-070",
+        "kind": "quoted_recounted",
+        "error": "false_positive",
+        "risk": "elevated"
+      },
+      {
+        "id": "test-073",
+        "kind": "transcription_errors",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-075",
+        "kind": "transcription_errors",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-081",
+        "kind": "incomplete",
+        "error": "false_negative",
+        "risk": "inconclusive"
+      },
+      {
+        "id": "test-082",
+        "kind": "incomplete",
+        "error": "false_negative",
+        "risk": "inconclusive"
+      }
+    ]
+  },
+  "nli": {
+    "n": 93,
+    "positives": 42,
+    "negatives": 51,
+    "confusion": {
+      "tp": 33,
+      "fp": 6,
+      "fn": 9,
+      "tn": 45
+    },
+    "call_level": {
+      "precision": 0.846,
+      "recall": 0.786,
+      "f1": 0.815,
+      "accuracy": 0.839
+    },
+    "category_level_micro": {
+      "precision": 0.769,
+      "recall": 0.577,
+      "f1": 0.659,
+      "tp": 60,
+      "fp": 18,
+      "fn": 44
+    },
+    "risk_levels": {
+      "elevated": 23,
+      "high": 16,
+      "inconclusive": 18,
+      "weak_signals": 10,
+      "none_detected": 26
+    },
+    "inconclusive": 18,
+    "per_kind": {
+      "benign_everyday": {
+        "correct": 7
+      },
+      "benign_financial": {
+        "correct": 7,
+        "wrong": 1
+      },
+      "family_emergency": {
+        "wrong": 1,
+        "correct": 4
+      },
+      "hypothetical": {
+        "correct": 6
+      },
+      "incomplete": {
+        "wrong": 2,
+        "correct": 5
+      },
+      "legit_urgent": {
+        "correct": 6,
+        "wrong": 1
+      },
+      "negated": {
+        "wrong": 2,
+        "correct": 5
+      },
+      "otp_credentials": {
+        "correct": 6,
+        "wrong": 1
+      },
+      "quoted_recounted": {
+        "wrong": 2,
+        "correct": 6
+      },
+      "remote_access": {
+        "correct": 4,
+        "wrong": 1
+      },
+      "secrecy_impersonation": {
+        "correct": 6
+      },
+      "transcription_errors": {
+        "correct": 7
+      },
+      "urgent_payment": {
+        "correct": 5,
+        "wrong": 2
+      },
+      "verification_bypass": {
+        "wrong": 2,
+        "correct": 4
+      }
+    },
+    "errors": [
+      {
+        "id": "test-004",
+        "kind": "urgent_payment",
+        "error": "false_negative",
+        "risk": "inconclusive"
+      },
+      {
+        "id": "test-006",
+        "kind": "urgent_payment",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "test-009",
+        "kind": "otp_credentials",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-015",
+        "kind": "verification_bypass",
+        "error": "false_negative",
+        "risk": "none_detected"
+      },
+      {
+        "id": "test-020",
+        "kind": "verification_bypass",
+        "error": "false_negative",
+        "risk": "inconclusive"
+      },
+      {
+        "id": "test-031",
+        "kind": "remote_access",
+        "error": "false_negative",
+        "risk": "inconclusive"
+      },
+      {
+        "id": "test-032",
+        "kind": "family_emergency",
+        "error": "false_negative",
+        "risk": "weak_signals"
+      },
+      {
+        "id": "test-043",
+        "kind": "benign_financial",
+        "error": "false_positive",
+        "risk": "elevated"
+      },
+      {
+        "id": "test-046",
+        "kind": "legit_urgent",
+        "error": "false_positive",
+        "risk": "high"
+      },
+      {
+        "id": "test-052",
+        "kind": "negated",
+        "error": "false_positive",
+        "risk": "elevated"
+      },
+      {
+        "id": "test-055",
+        "kind": "negated",
+        "error": "false_positive",
+        "risk": "elevated"
+      },
+      {
+        "id": "test-065",
+        "kind": "quoted_recounted",
+        "error": "false_positive",
+        "risk": "high"
+      },
+      {
+        "id": "test-067",
+        "kind": "quoted_recounted",
+        "error": "false_positive",
+        "risk": "elevated"
+      },
+      {
+        "id": "test-080",
+        "kind": "incomplete",
+        "error": "false_negative",
+        "risk": "inconclusive"
+      },
+      {
+        "id": "test-081",
+        "kind": "incomplete",
+        "error": "false_negative",
+        "risk": "inconclusive"
+      }
+    ],
+    "thresholds": {
+      "finding": 0.92,
+      "uncertain": 0.3,
+      "reported": 0.5
+    },
+    "latency_seconds": {
+      "mean": 0.401,
+      "median": 0.24,
+      "max": 1.296,
+      "mean_words": 23.6
+    }
+  },
+  "predictions": [
+    {
+      "id": "test-001",
+      "scam": true,
+      "rules": true,
+      "nli": true
+    },
+    {
+      "id": "test-002",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-003",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-004",
+      "scam": true,
+      "rules": true,
+      "nli": false
+    },
+    {
+      "id": "test-005",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-006",
+      "scam": true,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-007",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-008",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-009",
+      "scam": true,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-010",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-011",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-012",
+      "scam": true,
+      "rules": true,
+      "nli": true
+    },
+    {
+      "id": "test-013",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-014",
+      "scam": true,
+      "rules": true,
+      "nli": true
+    },
+    {
+      "id": "test-015",
+      "scam": true,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-016",
+      "scam": true,
+      "rules": true,
+      "nli": true
+    },
+    {
+      "id": "test-017",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-018",
+      "scam": true,
+      "rules": true,
+      "nli": true
+    },
+    {
+      "id": "test-019",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-020",
+      "scam": true,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-021",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-022",
+      "scam": true,
+      "rules": true,
+      "nli": true
+    },
+    {
+      "id": "test-023",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-024",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-025",
+      "scam": true,
+      "rules": true,
+      "nli": true
+    },
+    {
+      "id": "test-026",
+      "scam": true,
+      "rules": true,
+      "nli": true
+    },
+    {
+      "id": "test-027",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-028",
+      "scam": true,
+      "rules": true,
+      "nli": true
+    },
+    {
+      "id": "test-029",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-030",
+      "scam": true,
+      "rules": true,
+      "nli": true
+    },
+    {
+      "id": "test-031",
+      "scam": true,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-032",
+      "scam": true,
+      "rules": true,
+      "nli": false
+    },
+    {
+      "id": "test-033",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-034",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-035",
+      "scam": true,
+      "rules": true,
+      "nli": true
+    },
+    {
+      "id": "test-036",
+      "scam": true,
+      "rules": true,
+      "nli": true
+    },
+    {
+      "id": "test-037",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-038",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-039",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-040",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-041",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-042",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-043",
+      "scam": false,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-044",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-045",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-046",
+      "scam": false,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-047",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-048",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-049",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-050",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-051",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-052",
+      "scam": false,
+      "rules": true,
+      "nli": true
+    },
+    {
+      "id": "test-053",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-054",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-055",
+      "scam": false,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-056",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-057",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-058",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-059",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-060",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-061",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-062",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-063",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-064",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-065",
+      "scam": false,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-066",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-067",
+      "scam": false,
+      "rules": true,
+      "nli": true
+    },
+    {
+      "id": "test-068",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-069",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-070",
+      "scam": false,
+      "rules": true,
+      "nli": false
+    },
+    {
+      "id": "test-071",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-072",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-073",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-074",
+      "scam": true,
+      "rules": true,
+      "nli": true
+    },
+    {
+      "id": "test-075",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-076",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-077",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-078",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-079",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-080",
+      "scam": true,
+      "rules": true,
+      "nli": false
+    },
+    {
+      "id": "test-081",
+      "scam": true,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-082",
+      "scam": true,
+      "rules": false,
+      "nli": true
+    },
+    {
+      "id": "test-083",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-084",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-085",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-086",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-087",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-088",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-089",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-090",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-091",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-092",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    },
+    {
+      "id": "test-093",
+      "scam": false,
+      "rules": false,
+      "nli": false
+    }
+  ]
+}

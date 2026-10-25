@@ -1,0 +1,103 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Surfaces: warm paper, with one dark "stage" reserved for audio */
+  --color-paper: #f4f1ea;
+  --color-paper-2: #ebe7dc;
+  --color-card: #fbf9f4;
+  --color-line: #d9d4c6;
+  --color-line-strong: #bdb6a3;
+  --color-stage: #0d1017;
+  --color-stage-2: #161b26;
+  --color-stage-line: #2a3242;
+
+  /* Ink */
+  --color-ink: #14161b;
+  --color-ink-2: #444a56;
+  --color-ink-3: #5d636f;
+  --color-stage-ink: #e9edf6;
+  --color-stage-muted: #9aa3b5;
+
+  /* Accents */
+  --color-accent: #1e4fff;
+  --color-accent-deep: #1536b8;
+  --color-accent-tint: #e4eaff;
+  --color-accent-light: #7ea0ff;
+  --color-amber: #8a4f00;
+  --color-amber-tint: #f6e3bd;
+  --color-amber-light: #f5b942;
+  --color-danger: #b3261e;
+  --color-rec: #ff6b6b;
+  --color-ok: #0b6b5f;
+
+  --font-display: 'Fraunces Variable', 'Fraunces', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+html {
+  color-scheme: light;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-ink);
+  background-color: var(--color-paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.on-stage :focus-visible {
+  outline-color: var(--color-accent-light);
+}
+
+summary {
+  list-style: none;
+}
+summary::-webkit-details-marker {
+  display: none;
+}
+
+::selection {
+  background: var(--color-accent-tint);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.45s ease-out both;
+}
+@keyframes sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

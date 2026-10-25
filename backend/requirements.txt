@@ -1,0 +1,11 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9
+pydantic>=2.8
+pydantic-settings>=2.4
+mutagen>=1.47
+numpy>=2.0
+av>=14
+faster-whisper>=1.1
+torch>=2.4
+transformers>=5.0
