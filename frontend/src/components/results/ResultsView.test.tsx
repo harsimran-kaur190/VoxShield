@@ -119,7 +119,8 @@ describe('ResultsView', () => {
 
   it('shows the real score and does not call it a probability of fraud', () => {
     const html = render(base)
-    expect(html).toContain('0.07')
+    expect(html).toContain('7%')
+    expect(html).not.toContain('0.07')
     expect(html).toMatch(/not a (calibrated )?probability/)
     expect(html).not.toMatch(/\d+% (fake|real|likely)/i)
   })
@@ -223,7 +224,8 @@ describe('ResultsView', () => {
         indicators: [{ ...item, detector: 'nli', score: 0.973, trigger: 'Model score 0.97 for a statement on this sentence.' }],
       },
     })
-    expect(html).toContain('model score 0.97')
+    expect(html).toContain('Model score 0.97') // in the finding's own expandable "How this was found", not inline
+    expect(html).not.toContain('model score 0.97')
     expect(html).toContain('How this was found')
     expect(html).toContain('not a calibrated probability')
     expect(html).not.toMatch(/\d+(\.\d+)?% (likely|scam|fraud)/i)
@@ -257,13 +259,22 @@ describe('ResultsView evidence investigation', () => {
     expect(html).not.toContain('Do this first')
   })
 
-  it('states the source and limits of each finding, using only what the detector reported', () => {
-    const html = render({ ...base, intent: { ...base.intent, detector: 'nli', indicators: [nli] } })
-    expect(html).toContain('Source: </span>Scam-intent analysis (language model) of the speech-to-text transcript')
-    expect(html).toContain('The voice analysis was not used.')
-    expect(html).toContain('not the chance that a scam occurred')
-    expect(html).toContain('Depends on the transcript being correct.')
-    expect(html).not.toContain('low-confidence')
+  it('explains the source and general limits once for the whole list, not under every finding', () => {
+    const second = { ...nli, id: 'nli_y-0', rule_id: 'nli_y', char_start: 0, char_end: 6 }
+    const html = render({ ...base, intent: { ...base.intent, detector: 'nli', indicators: [nli, second] } })
+    expect(count(html, /Scam-intent analysis \(language model\) of the speech-to-text transcript/g)).toBe(1)
+    expect(count(html, /The voice analysis was not used\./g)).toBe(1)
+    expect(count(html, /not the chance that a scam occurred/g)).toBe(1)
+    expect(count(html, /Findings depend on the transcript being correct\./g)).toBe(1)
+    expect(html).not.toContain('Source: </span>')
+    expect(html).not.toContain('low-confidence') // a caution appears only for a finding that has one
+  })
+
+  it('keeps a caution that belongs to one finding visible next to that finding', () => {
+    const shaky = { ...base.transcript, segments: [{ ...base.transcript.segments[0], avg_logprob: -1.6 }] }
+    const html = render({ ...base, transcript: shaky })
+    expect(html).toContain('aria-label="Cautions for this finding"')
+    expect(html).toContain('Speech recognition was low-confidence for this part')
   })
 
   it('flags low-confidence speech recognition only when the transcriber reported it', () => {
@@ -306,7 +317,7 @@ describe('ResultsView next step', () => {
     why: 'This is an ordinary precaution.', basis: 'general' as const, evidence: [], secondary: false,
   }
   const quiet = { ...base.intent, risk: 'none_detected' as const, summary: 'No scam indicators were found in the transcript.', indicators: [], categories: [] }
-  const topOf = (html: string) => html.slice(html.indexOf('id="next-heading"'), html.indexOf('Recording timeline'))
+  const topOf = (html: string) => html.slice(html.indexOf('id="next-heading"'), html.indexOf('01 · Scam intent'))
 
   it('1. a genuine OTP request leads with the action, its evidence, and why it matters', () => {
     const top = topOf(render({ ...base, recommendations: { ...base.recommendations, items: [{ ...base.recommendations.items[0], why: 'Organizations do not ask for codes.', basis: 'finding' }] } }))
@@ -420,7 +431,7 @@ describe('ResultsView next step', () => {
 
   it('shows the voice score as a label score, never as a probability', () => {
     const html = render(base)
-    expect(html).toContain('median “fake” label score, not a probability')
+    expect(html).toContain('median fake-label score, not a probability')
     expect(html).not.toMatch(/\d+(\.\d+)?\s?%\s*(fake|synthetic|likely|chance)/i)
   })
 

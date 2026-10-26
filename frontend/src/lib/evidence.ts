@@ -17,21 +17,29 @@ export function findingSource(indicator: Pick<IntentIndicator, 'detector'>): str
     : 'Scam-intent analysis (fixed text rules) of the speech-to-text transcript. The voice analysis was not used.'
 }
 
-/** Limits that apply to this specific finding, taken from what the detector and transcriber actually reported. */
+/**
+ * Cautions that apply to this one finding, taken from what the detector and transcriber actually reported for it. The
+ * limits that are true of every finding are said once for the whole list (see sharedFindingNotes), not repeated here.
+ */
 export function findingCaveats(
-  indicator: Pick<IntentIndicator, 'detector' | 'context' | 'score'>,
+  indicator: Pick<IntentIndicator, 'context'>,
   segment: Pick<TranscriptSegment, 'avg_logprob'> | undefined,
 ): string[] {
   const notes: string[] = []
-  if (indicator.detector === 'nli' && indicator.score !== null) {
-    notes.push('The model score measures how strongly the sentence matches a scam-style statement. It is not the chance that a scam occurred.')
-  } else if (indicator.detector === 'rules') {
-    notes.push('A fixed wording rule matched. It cannot tell whether the speaker meant it.')
-  }
   if (indicator.context === 'reported') notes.push('The wording appears to be quoted or recounted, so it may not have been said to you.')
   if (segment && finite(segment.avg_logprob) && segment.avg_logprob < LOW_TRANSCRIPTION_CONFIDENCE) {
     notes.push('Speech recognition was low-confidence for this part, so the transcript wording may be wrong.')
   }
-  notes.push('Depends on the transcript being correct.')
   return notes
+}
+
+/** What is true of every finding from this detector. Shown once, in the findings section's expandable explanation. */
+export function sharedFindingNotes(detector: IntentIndicator['detector']): string[] {
+  return [
+    detector === 'nli'
+      ? 'A model score measures how strongly a sentence matches a scam-style statement. It is not the chance that a scam occurred.'
+      : 'A fixed wording rule matched. It cannot tell whether the speaker meant it.',
+    'Findings depend on the transcript being correct.',
+    'Real organizations also say some of these things, so a finding is a clue rather than evidence of criminal intent.',
+  ]
 }

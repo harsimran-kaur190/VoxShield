@@ -1,10 +1,9 @@
 import { ArrowDownToLine, Play } from 'lucide-react'
 
 import { usePlayback, usePlaybackState } from '../../hooks/usePlayback'
-import { findingCaveats, findingSource } from '../../lib/evidence'
+import { findingCaveats, findingSource, sharedFindingNotes } from '../../lib/evidence'
 import { CATEGORY_LABELS, formatTimestamp, segmentOf } from '../../lib/highlight'
 import { findingSeekTime, type FindingGroup } from '../../lib/playback'
-import { INTENT_VIEW } from '../../lib/views'
 import type { IntentAssessment, TranscriptResult } from '../../lib/types'
 import { Limitations, ModelNote } from '../ModelNote'
 
@@ -32,6 +31,7 @@ function Entry({ group, transcript, active, onSelect, onShowInTranscript }: { gr
   const located = segmentOf(group.items[0], transcript.segments) !== undefined
   const severity = SEVERITY[group.severity]
   const categories = [...new Set(group.items.map((item) => CATEGORY_LABELS[item.category] ?? item.category))]
+  const caveats = [...new Set(group.items.flatMap((item) => findingCaveats(item, segmentOf(item, transcript.segments))))]
 
   return (
     <li
@@ -81,11 +81,6 @@ function Entry({ group, transcript, active, onSelect, onShowInTranscript }: { gr
               {group.items.length > 1 && <span className="font-medium text-ink">{CATEGORY_LABELS[item.category] ?? item.category}: </span>}
               {group.items.length === 1 && <span className="font-medium text-ink">Why: </span>}
               {item.explanation}
-              {item.score !== null && (
-                <span className="ml-2 font-mono text-xs text-ink-3" title="NLI entailment score for this sentence. Not a probability that this is a scam.">
-                  model score {item.score.toFixed(2)}
-                </span>
-              )}
             </p>
             <p>
               <span className="font-medium text-ink">What to do: </span>
@@ -95,17 +90,13 @@ function Entry({ group, transcript, active, onSelect, onShowInTranscript }: { gr
         ))}
       </ul>
 
-      <div className="mt-3 space-y-1 text-sm text-ink-3">
-        <p>
-          <span className="font-medium text-ink-2">Source: </span>
-          {findingSource(group.items[0])}
-        </p>
-        <ul className="list-disc pl-5" aria-label="Limits of this finding">
-          {[...new Set(group.items.flatMap((item) => findingCaveats(item, segmentOf(item, transcript.segments))))].map((note) => (
+      {caveats.length > 0 && (
+        <ul aria-label="Cautions for this finding" className="mt-3 list-disc space-y-0.5 pl-5 text-sm text-ink-3">
+          {caveats.map((note) => (
             <li key={note}>{note}</li>
           ))}
         </ul>
-      </div>
+      )}
 
       <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
         {located ? (
@@ -129,14 +120,20 @@ function Entry({ group, transcript, active, onSelect, onShowInTranscript }: { gr
   )
 }
 
+function countLine(intent: IntentAssessment, passages: number): string {
+  const direct = intent.indicators.filter((item) => item.context === 'direct').length
+  const quoted = intent.indicators.length - direct
+  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
+  const head = direct > 0 ? `${plural(direct, 'indicator')} found` : 'No direct indicators'
+  return `${head}${quoted > 0 ? `${direct > 0 ? ', plus' : ';'} ${quoted} in quoted or recounted speech` : ''}, in ${plural(passages, 'passage')}.`
+}
+
 export function IntentSection({ intent, transcript, groups, selected, onSelect, onShowInTranscript }: Props) {
-  const view = INTENT_VIEW[intent.risk]
   return (
     <section aria-labelledby="intent-heading">
-      <p className="font-mono text-sm text-amber">01 · Scam intent</p>
-      <h2 id="intent-heading" className="mt-2 flex items-center gap-3 font-display text-3xl font-medium sm:text-4xl">
-        <span className={`size-3 shrink-0 rounded-full ${view.dot}`} aria-hidden />
-        {view.label}
+      <p className="font-mono text-sm text-amber">01 · Scam intent · from the transcript</p>
+      <h2 id="intent-heading" className="mt-2 font-display text-2xl font-medium sm:text-3xl">
+        Findings
       </h2>
       <p className="mt-3 text-ink-2">{intent.summary}</p>
       {intent.error && <p className="mt-2 text-danger">{intent.error}</p>}
@@ -144,7 +141,9 @@ export function IntentSection({ intent, transcript, groups, selected, onSelect, 
         <p className="mt-2 text-sm text-ink-3">The detector could not settle on a result. Treat this as no answer, and neither as a warning nor as reassurance.</p>
       )}
       {groups.length > 0 && (
-        <p className="mt-2 text-sm text-ink-3">Indicators are clues found in the conversation, listed strongest first. They don’t confirm fraudulent intent.</p>
+        <p className="mt-2 text-sm text-ink-3">
+          {countLine(intent, groups.length)} Indicators are linguistic clues, listed strongest first. They do not prove criminal intent.
+        </p>
       )}
 
       {groups.length > 0 ? (
@@ -168,9 +167,15 @@ export function IntentSection({ intent, transcript, groups, selected, onSelect, 
         )
       )}
 
-      {intent.method && (
+      {(intent.method || groups.length > 0) && (
         <details className="mt-4 text-sm">
-          <summary className="flex cursor-pointer items-center text-accent underline-offset-4 hover:underline pointer-coarse:min-h-11">How indicators are found</summary>
+          <summary className="flex cursor-pointer items-center text-accent underline-offset-4 hover:underline pointer-coarse:min-h-11">How indicators are found, and what they cannot show</summary>
+          <p className="mt-2 text-ink-2">{findingSource({ detector: intent.detector })}</p>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-ink-2">
+            {sharedFindingNotes(intent.detector).map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
           {intent.score_note && <p className="mt-2 text-ink-2">{intent.score_note}</p>}
           <ModelNote model={intent.method} />
           <Limitations items={intent.limitations} />

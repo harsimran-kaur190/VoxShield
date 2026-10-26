@@ -68,6 +68,17 @@ export function TranscriptWorkspace({ transcript, indicators, selected, onSelect
         )}
       </div>
 
+      {transcript.quality_notes.length > 0 && (
+        <div role="note" className="mt-4 border-l-2 border-amber-light pl-4 text-sm text-ink-2">
+          <p className="font-medium text-amber">Transcription warning</p>
+          <ul className="mt-1 space-y-1">
+            {transcript.quality_notes.map((note) => (
+              <li key={note}>{note}</li>
+            ))}
+          </ul>
+          <p className="mt-1 text-ink-3">Scam indicators are found in this text, so a misheard word can change what is flagged.</p>
+        </div>
+      )}
       {transcript.status === 'ok' && transcript.segments.length === 0 ? (
         <div className="mt-5 rounded-2xl border border-line bg-card p-5">
           <p className="text-sm text-ink-3">The transcript came back without segments, so nothing can be highlighted or linked to the audio. Plain text:</p>
@@ -155,11 +166,6 @@ export function TranscriptWorkspace({ transcript, indicators, selected, onSelect
             : (transcript.error ?? 'The transcript is unavailable.')}
         </p>
       )}
-      {transcript.quality_notes.map((note) => (
-        <p key={note} className="mt-3 text-sm text-amber">
-          {note}
-        </p>
-      ))}
       <ModelNote model={transcript.model} />
     </section>
   )

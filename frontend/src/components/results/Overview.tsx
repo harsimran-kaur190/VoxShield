@@ -1,6 +1,7 @@
 import { AudioLines, MessageSquareText } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { FAKE_SCORE_NAME, formatFakeScore } from '../../lib/score'
 import type { FindingGroup } from '../../lib/playback'
 import { INTENT_VIEW, VOICE_VIEW } from '../../lib/views'
 import type { AnalysisReport } from '../../lib/types'
@@ -45,7 +46,7 @@ function Panel({ id, icon, kicker, label, dot, basis, detail, uncertainty, targe
       <button
         type="button"
         onClick={() => scrollToId(target)}
-        className="mt-1 inline-flex items-center rounded text-sm text-accent underline underline-offset-4 hover:text-accent-deep focus-visible:outline-2 focus-visible:outline-offset-2 pointer-coarse:min-h-11"
+        className="mt-1 inline-flex items-center rounded text-sm text-accent underline underline-offset-4 hover:text-accent-deep focus-visible:outline-2 focus-visible:outline-offset-2 pointer-coarse:min-h-11 lg:hidden"
       >
         See the details
       </button>
@@ -60,7 +61,7 @@ export function Overview({ report, groups }: Props) {
   const intentView = INTENT_VIEW[intent.risk]
   const voiceDetail =
     voice.fake_score_median !== null && voice.windows_analyzed > 0
-      ? `median “fake” label score ${voice.fake_score_median.toFixed(2)} (not a probability) · ${voice.windows_analyzed} window${voice.windows_analyzed === 1 ? '' : 's'}`
+      ? `median ${FAKE_SCORE_NAME} ${formatFakeScore(voice.fake_score_median)} (not a probability) · ${voice.windows_analyzed} window${voice.windows_analyzed === 1 ? '' : 's'}`
       : null
   const flagged = groups.filter((g) => g.context === 'direct').length
   const intentDetail = intent.risk === 'unavailable' ? null : flagged > 0 ? `${flagged} passage${flagged === 1 ? '' : 's'} quoted from the transcript` : null

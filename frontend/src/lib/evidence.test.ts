@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { findingCaveats, findingSource, hasUsableTiming } from './evidence'
+import { findingCaveats, findingSource, hasUsableTiming, sharedFindingNotes } from './evidence'
 
 describe('evidence helpers', () => {
   it('accepts only real, ordered segment times', () => {
@@ -15,11 +15,18 @@ describe('evidence helpers', () => {
     expect(findingSource({ detector: 'rules' })).toContain('fixed text rules')
   })
 
-  it('adds reported-speech and score caveats only when they apply', () => {
-    const direct = findingCaveats({ detector: 'rules', context: 'direct', score: null }, undefined)
-    expect(direct.join(' ')).not.toContain('quoted')
-    const reported = findingCaveats({ detector: 'nli', context: 'reported', score: 0.9 }, { avg_logprob: null })
-    expect(reported.join(' ')).toContain('quoted or recounted')
-    expect(reported.join(' ')).toContain('not the chance')
+  it('lists a caution for one finding only when it applies to that finding', () => {
+    expect(findingCaveats({ context: 'direct' }, undefined)).toEqual([])
+    expect(findingCaveats({ context: 'direct' }, { avg_logprob: -0.3 })).toEqual([])
+    expect(findingCaveats({ context: 'reported' }, { avg_logprob: null }).join(' ')).toContain('quoted or recounted')
+    expect(findingCaveats({ context: 'direct' }, { avg_logprob: -1.6 }).join(' ')).toContain('low-confidence')
+  })
+
+  it('says what is true of every finding once, by detector, without repeating it per finding', () => {
+    const model = sharedFindingNotes('nli').join(' ')
+    expect(model).toContain('not the chance that a scam occurred')
+    expect(model).toContain('depend on the transcript being correct')
+    expect(sharedFindingNotes('rules').join(' ')).toContain('cannot tell whether the speaker meant it')
+    for (const notes of [sharedFindingNotes('nli'), sharedFindingNotes('rules')]) expect(notes.join(' ')).not.toMatch(/not proof/i)
   })
 })

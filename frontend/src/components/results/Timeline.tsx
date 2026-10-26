@@ -5,6 +5,7 @@ import { usePlayback, usePlaybackState, usePlaybackTime } from '../../hooks/useP
 import type { AudioController, PlaybackState } from '../../lib/audioController'
 import { formatTimestamp } from '../../lib/highlight'
 import { findingSeekTime, positionLabel, type FindingGroup } from '../../lib/playback'
+import { FAKE_SCORE_NAME, formatFakeScore } from '../../lib/score'
 import type { AnalysisReport } from '../../lib/types'
 import type { Waveform as WaveformData } from '../../lib/waveform'
 import { Waveform } from '../Waveform'
@@ -225,7 +226,7 @@ export function Timeline({ report, waveform, groups, selected, onSelect, onChoos
 
         <ul aria-label="Voice analysis windows" className="relative mt-1.5 h-9 overflow-hidden rounded-lg bg-stage-2/60">
           {report.voice.windows.map((window) => {
-            const label = `Voice window ${formatTimestamp(window.start_seconds)} to ${formatTimestamp(window.end_seconds)}, model “fake” score ${window.fake_score.toFixed(2)}${state.status === 'ready' ? '. Press to jump here.' : ''}`
+            const label = `Voice window ${formatTimestamp(window.start_seconds)} to ${formatTimestamp(window.end_seconds)}, ${FAKE_SCORE_NAME} ${formatFakeScore(window.fake_score)}${state.status === 'ready' ? '. Press to jump here.' : ''}`
             return (
               <li
                 key={window.start_seconds}
@@ -241,7 +242,7 @@ export function Timeline({ report, waveform, groups, selected, onSelect, onChoos
                   className="h-full w-full truncate border-l-2 border-accent-light px-1.5 text-left font-mono text-xs text-stage-ink disabled:cursor-default"
                   style={{ backgroundColor: `rgba(126,160,255,${0.12 + window.fake_score * 0.4})` }}
                 >
-                  {window.fake_score.toFixed(2)}
+                  {formatFakeScore(window.fake_score)}
                 </button>
               </li>
             )

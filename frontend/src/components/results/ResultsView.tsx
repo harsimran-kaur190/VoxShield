@@ -11,6 +11,7 @@ import { IntentSection } from './IntentSection'
 import { NextStep } from './NextStep'
 import { Overview } from './Overview'
 import { PlaybackProvider } from './PlaybackProvider'
+import { ReportDetails } from './ReportDetails'
 import { RecommendationsSection } from './RecommendationsSection'
 import { scrollToFinding, scrollToId, scrollToMark } from './scroll'
 import { Timeline } from './Timeline'
@@ -82,7 +83,7 @@ export function ResultsView({ report, waveform, audio = null, onReset, onRetry }
         <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
           <div className="min-w-0 max-w-3xl">
             <p className="font-mono text-sm text-ink-3">{STATUS[report.status]}</p>
-            <h1 className="mt-1 font-display text-4xl font-medium tracking-tight sm:text-5xl">Audio analysis</h1>
+            <h1 className="mt-1 font-display text-4xl font-medium tracking-tight">Audio analysis</h1>
             <p className="mt-2 flex min-w-0 items-center gap-2 text-sm text-ink-2">
               <FileAudio className="size-4 shrink-0 text-ink-3" aria-hidden />
               <span className="truncate" title={meta.filename}>
@@ -119,8 +120,6 @@ export function ResultsView({ report, waveform, audio = null, onReset, onRetry }
 
         {report.status !== 'failed' && <NextStep plan={report.recommendations} onRetry={onRetry} />}
 
-        <Timeline report={report} waveform={waveform} groups={groups} selected={selected} onSelect={selectFinding} onChooseAgain={onReset} />
-
         {/* Same order as the overview: what is said (the evidence you can act on) first, then how the voice sounds. */}
         <div className="grid gap-12 lg:grid-cols-[7fr_5fr] lg:gap-0">
           <div className="lg:pr-12">
@@ -130,6 +129,9 @@ export function ResultsView({ report, waveform, audio = null, onReset, onRetry }
             <VoiceSection voice={report.voice} />
           </div>
         </div>
+
+        {/* The player and timeline come after the evidence they point into: findings and the voice panel first. */}
+        <Timeline report={report} waveform={waveform} groups={groups} selected={selected} onSelect={selectFinding} onChooseAgain={onReset} />
 
         <TranscriptWorkspace transcript={report.transcript} indicators={report.intent.indicators} selected={selected} onSelect={selectFinding} />
         {/* With nothing to act on, the summary at the top already says what this section would. A failed analysis has no summary there, so it keeps this one for its retry button. */}
@@ -142,6 +144,7 @@ export function ResultsView({ report, waveform, audio = null, onReset, onRetry }
             onRetry={onRetry}
           />
         )}
+        <ReportDetails report={report} />
         <UnderstandingResults />
 
         <p className="text-center text-sm text-ink-3">
