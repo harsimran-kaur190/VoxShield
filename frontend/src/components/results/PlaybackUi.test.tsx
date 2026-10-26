@@ -244,11 +244,14 @@ describe('Results header and layout', () => {
     expect(html).toContain('Analyze another')
   })
 
-  it('summarizes the two assessments separately without one combined score or a claim of proven fraud', () => {
+  it('shows the two assessments side by side, each with its own label and basis, and no combined score', () => {
     const html = renderToStaticMarkup(full(report([finding()])))
-    const summary = html.match(/<p class="mt-4 text-lg leading-snug">([^<]*)<\/p>/)?.[1] ?? ''
-    expect(summary).toBe('Strong scam indicators were found in the conversation, and the voice model favors “real”. These are two separate assessments.')
-    expect(summary).not.toMatch(/overall|combined|probability|proven|\d/i)
+    const overview = html.slice(html.indexOf('id="overview-heading"'), html.indexOf('id="next-heading"'))
+    expect(overview).toContain('Two separate checks.')
+    expect(overview).toContain('Strong indicators')
+    expect(overview).toContain('Model favors “real”')
+    expect(overview).toMatch(/Scam intent[\s\S]*Voice authenticity/)
+    expect(overview).not.toMatch(/overall|combined (risk|score)|proven|%/i)
   })
 
   it('with no audio supplied, the whole page still renders and explains what happened', () => {
@@ -262,7 +265,9 @@ describe('Results header and layout', () => {
     r.intent = { ...r.intent, risk: 'inconclusive', summary: 'Too short to judge.' }
     r.recommendations = { state: 'insufficient', headline: "There isn't enough reliable evidence to recommend a result-specific action.", detail: null, items: [] }
     const html = renderToStaticMarkup(full(r))
-    expect(html).toContain('The conversation check was inconclusive')
+    const overview = html.slice(html.indexOf('id="overview-heading"'), html.indexOf('id="next-heading"'))
+    expect(overview).toContain('Inconclusive')
+    expect(overview).toContain('Too short to judge.') // an unanswered check says why, so silence is not read as safe or as a scam
     expect(html).toContain('enough reliable evidence')
     expect(html).not.toContain('Do this first')
   })

@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from app.config import Settings
 from app.schemas_analysis import IntentAssessment, TranscriptResult, TranscriptSegment
 from app.services.scam_intent import RuleBasedScamIntentAnalyzer
-from app.services.scam_nli import HYPOTHESES, REPORTED_TEXTS, NliModel, NliScamIntentAnalyzer, ScoredTranscript, SentenceScores, Thresholds
+from app.services.scam_nli import DIRECTION_TEXTS, HYPOTHESES, PROTECTIVE_TEXTS, REPORTED_TEXTS, NliModel, NliScamIntentAnalyzer, ScoredTranscript, SentenceScores, Thresholds
 from evaluation.dataset import DEV, TEST, Example
 
 HERE = Path(__file__).parent
@@ -38,8 +38,8 @@ def transcript_for(example: Example) -> TranscriptResult:
 
 
 def hypothesis_fingerprint() -> str:
-    joined = "|".join([text for h in HYPOTHESES for text in h.texts] + list(REPORTED_TEXTS))
-    return hashlib.sha256(("windows-v2|" + joined).encode()).hexdigest()[:12]
+    joined = "|".join([text for h in HYPOTHESES for text in h.texts] + list(REPORTED_TEXTS) + list(PROTECTIVE_TEXTS) + list(DIRECTION_TEXTS))
+    return hashlib.sha256(("windows-v4-direction|" + joined).encode()).hexdigest()[:12]
 
 
 def load_cache() -> dict:

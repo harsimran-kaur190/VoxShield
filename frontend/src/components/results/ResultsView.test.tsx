@@ -159,7 +159,7 @@ describe('ResultsView', () => {
 
   it('shows a calm empty state for no findings that never calls the call safe', () => {
     const html = render({ ...base, intent: { ...base.intent, risk: 'none_detected', summary: 'No scam indicators were found in the transcript.', indicators: [], categories: [] } })
-    expect(html).toContain('Nothing in the transcript matched the scam check')
+    expect(html).toContain('No suspicious indicators were identified by the available analysis')
     expect(html).toContain('not a clearance')
     expect(html).not.toMatch(/\bsafe\b/i)
   })
@@ -231,5 +231,207 @@ describe('ResultsView', () => {
 
   it('does not show a score for a rule finding', () => {
     expect(render(base)).not.toMatch(/model score \d/)
+  })
+})
+
+describe('ResultsView evidence investigation', () => {
+  const nli = { ...base.intent.indicators[0], detector: 'nli' as const, score: 0.97, rule_id: 'nli_x', id: 'nli_x-7' }
+
+  it('shows the overview with the two assessments kept separate and no combined score', () => {
+    const html = render(base)
+    expect(html).toContain('id="overview-heading"')
+    expect(html).toContain('Looks at how the audio sounds, not at what is said.')
+    expect(html).toContain('Looks at what is said in the transcript, not at how the voice sounds.')
+    expect(html).toContain('Model favors “real”')
+    expect(html).toContain('Notable indicators')
+    expect(html).toContain('not a probability')
+    expect(html).not.toMatch(/overall|combined (risk|score)|probability of (a )?scam/i)
+  })
+
+  it('keeps a real voice with scam findings, and a synthetic-leaning voice with no findings, as independent outcomes', () => {
+    const fake = { ...base.voice, verdict: 'model_favors_fake' as const, summary: 'Fake label won.' }
+    const quiet = { ...base.intent, risk: 'none_detected' as const, summary: 'No scam indicators were found in the transcript.', indicators: [], categories: [] }
+    const html = render({ ...base, voice: fake, intent: quiet, recommendations: { state: 'none_detected', headline: 'Nothing suspicious found.', detail: null, items: [] } })
+    expect(html).toContain('Model favors “fake”')
+    expect(html).toContain('No indicators found')
+    expect(html).not.toContain('Do this first')
+  })
+
+  it('states the source and limits of each finding, using only what the detector reported', () => {
+    const html = render({ ...base, intent: { ...base.intent, detector: 'nli', indicators: [nli] } })
+    expect(html).toContain('Source: </span>Scam-intent analysis (language model) of the speech-to-text transcript')
+    expect(html).toContain('The voice analysis was not used.')
+    expect(html).toContain('not the chance that a scam occurred')
+    expect(html).toContain('Depends on the transcript being correct.')
+    expect(html).not.toContain('low-confidence')
+  })
+
+  it('flags low-confidence speech recognition only when the transcriber reported it', () => {
+    const shaky = { ...base.transcript, segments: [{ ...base.transcript.segments[0], avg_logprob: -1.6 }] }
+    expect(render({ ...base, transcript: shaky })).toContain('Speech recognition was low-confidence')
+    const fine = { ...base.transcript, segments: [{ ...base.transcript.segments[0], avg_logprob: -0.2 }] }
+    expect(render({ ...base, transcript: fine })).not.toContain('low-confidence')
+  })
+
+  it('says the voice classifier gives no explanation instead of inventing one', () => {
+    const html = render(base)
+    expect(html).toContain('does not say which sounds or features led to it')
+    expect(html).toContain('voice-related signal')
+  })
+
+  it('does not link the transcript to the audio when segment timestamps are unusable', () => {
+    const broken = { ...base.transcript, segments: [{ ...base.transcript.segments[0], start_seconds: Number.NaN, end_seconds: Number.NaN }] }
+    const html = render({ ...base, transcript: broken })
+    expect(html).toContain('This transcript has no timestamps')
+    expect(html).not.toContain('Play from')
+  })
+
+  it('falls back to plain text when the transcript has no segments', () => {
+    const html = render({ ...base, transcript: { ...base.transcript, segments: [] } })
+    expect(html).toContain('came back without segments')
+    expect(html).toContain('Please read me the one time password.')
+  })
+
+  it('explains an inconclusive scam check as neither warning nor reassurance', () => {
+    const html = render({ ...base, intent: { ...base.intent, risk: 'inconclusive', summary: 'Could not decide.', indicators: [], categories: [] } })
+    expect(html).toContain('neither as a warning nor as reassurance')
+    expect(html).not.toMatch(/\bsafe\b/i)
+  })
+})
+
+describe('ResultsView next step', () => {
+  const plan = (overrides: Partial<AnalysisReport['recommendations']>): AnalysisReport['recommendations'] => ({ state: 'none_detected', headline: 'No suspicious indicators were detected in the analyzed transcript.', detail: 'Not a guarantee.', items: [], general: [], ...overrides })
+  const generalVerify = {
+    id: 'general_verify', title: 'If a message about your account worries you, check it yourself', detail: 'Open your bank app.', priority: 'low' as const,
+    why: 'This is an ordinary precaution.', basis: 'general' as const, evidence: [], secondary: false,
+  }
+  const quiet = { ...base.intent, risk: 'none_detected' as const, summary: 'No scam indicators were found in the transcript.', indicators: [], categories: [] }
+  const topOf = (html: string) => html.slice(html.indexOf('id="next-heading"'), html.indexOf('Recording timeline'))
+
+  it('1. a genuine OTP request leads with the action, its evidence, and why it matters', () => {
+    const top = topOf(render({ ...base, recommendations: { ...base.recommendations, items: [{ ...base.recommendations.items[0], why: 'Organizations do not ask for codes.', basis: 'finding' }] } }))
+    expect(top).toContain('What should I do next?')
+    expect(top).toContain("Don&#x27;t share codes, PINs or passwords")
+    expect(top).toContain('read me the one time password')
+    expect(top).toContain('Organizations do not ask for codes.')
+    expect(top).toContain('From a finding in this recording')
+  })
+
+  it('2. a protective awareness message with no indicators gets a labelled general precaution and no action', () => {
+    const html = render({ ...base, intent: quiet, recommendations: plan({ general: [generalVerify] }) })
+    const top = topOf(html)
+    expect(top).toContain('No suspicious indicators were detected')
+    expect(top).toContain('check it yourself')
+    expect(top).toContain('General precaution. Not a result of this analysis')
+    expect(html).not.toContain('Do this first')
+  })
+
+  it('3. a possibly synthetic voice with harmless content is explained as a voice limitation, not a scam', () => {
+    const voiceItem = { id: 'voice', title: "Don't rely on the voice to confirm who it is", detail: 'Leaned fake in 3 of 3 windows.', priority: 'medium' as const, why: 'Voice models can be wrong.', basis: 'voice' as const, evidence: [{ source: 'voice' as const, id: null, label: 'Model favored “fake”', start_seconds: null }], secondary: false }
+    const html = render({ ...base, intent: quiet, voice: { ...base.voice, verdict: 'model_favors_fake' }, recommendations: plan({ state: 'actions', headline: 'The voice model leaned “fake”, but no direct scam request was found in the conversation.', items: [voiceItem] }) })
+    const top = topOf(html)
+    expect(top).toContain('leaned “fake”, but no direct scam request')
+    expect(top).toContain('From the voice model only. This is not a scam finding')
+    expect(top).not.toMatch(/code|password|payment|hang up/i)
+  })
+
+  it('4. a payment request leads with independent verification', () => {
+    const item = { id: 'payment', title: 'Pause any payment', detail: 'Verify the request through a trusted contact method.', priority: 'high' as const, why: 'Money sent on request is hard to recover.', basis: 'finding' as const, evidence: [{ source: 'intent' as const, id: 'p-1', label: 'transfer two thousand dollars', start_seconds: 3 }], secondary: false }
+    const top = topOf(render({ ...base, recommendations: { ...base.recommendations, items: [item] } }))
+    expect(top).toContain('Pause any payment')
+    expect(top).toContain('transfer two thousand dollars')
+    expect(top).toContain('0:03')
+  })
+
+  it('5. an ambiguous bank notification gets ordinary verification and never the words scam or fraud', () => {
+    const html = render({ ...base, intent: { ...quiet, risk: 'inconclusive' }, recommendations: plan({ state: 'insufficient', headline: "There isn't enough reliable evidence to recommend a result-specific action.", general: [generalVerify] }) })
+    const top = topOf(html)
+    expect(top).toContain('check it yourself')
+    expect(top).not.toMatch(/scam|fraud|fake/i)
+  })
+
+  it('6. a protective warning followed by a request still leads with the request', () => {
+    const intent = { ...base.intent, suppressed_mentions: 1 }
+    const top = topOf(render({ ...base, intent }))
+    expect(top).toContain('read me the one time password')
+    expect(top).not.toContain('Never share')
+  })
+
+  it('7. with no usable evidence it says so, offers a retry, and adds no generic filler', () => {
+    const html = render({ ...base, transcript: { ...base.transcript, status: 'no_speech', segments: [], text: '' }, intent: { ...quiet, risk: 'inconclusive' }, recommendations: plan({ state: 'insufficient', headline: "There isn't enough reliable evidence to recommend a result-specific action.", general: [] }) })
+    const top = topOf(html)
+    expect(top).toContain('enough reliable evidence')
+    expect(top).toContain('Analyze this recording again')
+    expect(top).not.toContain('General precaution')
+  })
+
+  it('shows each step once with its basis, says why only once for the first step, and omits the top summary when the analysis failed', () => {
+    const [first] = base.recommendations.items
+    const second = { ...first, id: 'pressure', title: 'Do not let pressure set the pace', why: 'Second why.', basis: 'finding' as const, priority: 'medium' as const }
+    const html = render({ ...base, recommendations: { ...base.recommendations, items: [{ ...first, why: 'First why.', basis: 'finding' }, second] } })
+    expect(count(html, /First why\./g)).toBe(1) // in the top summary, not repeated under "Do this first"
+    expect(html).toContain('Why: Second why.')
+    expect(html).toContain('Do this first')
+    expect(render({ ...base, status: 'failed' })).not.toContain('What should I do next?')
+  })
+
+  it('still renders a report from an older server with no basis, why, or general list', () => {
+    const html = render(base)
+    expect(html).toContain('From a finding in this recording')
+  })
+
+  it('shows the general precaution under a voice-only plan for an ambiguous message', () => {
+    const voiceItem = { id: 'voice', title: 'Voice item', detail: 'Leaned fake.', priority: 'medium' as const, basis: 'voice' as const, evidence: [], secondary: false }
+    const html = render({ ...base, recommendations: plan({ state: 'actions', headline: 'Voice leaned fake.', items: [voiceItem], general: [generalVerify] }) })
+    expect(html).toContain('check it yourself')
+    expect(html).toContain('General precaution. Not a result of this analysis')
+  })
+
+  it('puts the two checks before the next step, scam intent first, each with its own basis', () => {
+    const html = render(base)
+    expect(html.indexOf('id="overview-heading"')).toBeLessThan(html.indexOf('id="next-heading"'))
+    const overview = html.slice(html.indexOf('id="overview-heading"'), html.indexOf('id="next-heading"'))
+    expect(overview.indexOf('Scam intent')).toBeLessThan(overview.indexOf('Voice authenticity'))
+    expect(overview).toContain('A real voice can carry a scam, and a synthetic voice can be harmless.')
+  })
+
+  it('does not repeat the same guidance twice when there is nothing to act on', () => {
+    const quiet = { ...base.intent, risk: 'none_detected' as const, summary: 'No scam indicators were found in the transcript.', indicators: [], categories: [] }
+    const html = render({ ...base, intent: quiet, recommendations: plan({ general: [generalVerify] }) })
+    expect(count(html, /No suspicious indicators were detected/g)).toBe(1)
+    expect(count(html, /check it yourself/g)).toBe(1)
+    expect(html).not.toContain('id="steps-heading"')
+  })
+
+  it('keeps the full steps section, with its retry, when the analysis failed', () => {
+    const html = render({ ...base, status: 'failed', recommendations: plan({ state: 'insufficient', headline: "There isn't enough reliable evidence to recommend a result-specific action." }) })
+    expect(html).toContain('id="steps-heading"')
+    expect(html).toContain('Analyze this recording again')
+    expect(html).not.toContain('What should I do next?')
+  })
+
+  it('explains an inconclusive voice check in the overview rather than leaving a bare label', () => {
+    const html = render({ ...base, voice: { ...base.voice, verdict: 'inconclusive', summary: 'Windows disagreed, so no lean is reported.', fake_score_median: 0.5, windows_analyzed: 2 } })
+    const overview = html.slice(html.indexOf('id="overview-heading"'), html.indexOf('id="next-heading"'))
+    expect(overview).toContain('Inconclusive')
+    expect(overview).toContain('Windows disagreed, so no lean is reported.')
+    expect(overview).not.toContain('Strong')
+  })
+
+  it('shows the voice score as a label score, never as a probability', () => {
+    const html = render(base)
+    expect(html).toContain('median “fake” label score, not a probability')
+    expect(html).not.toMatch(/\d+(\.\d+)?\s?%\s*(fake|synthetic|likely|chance)/i)
+  })
+
+  it('says when an offer to send money was not counted as a request, and gives no payment advice for it', () => {
+    const intent = {
+      ...base.intent, risk: 'none_detected' as const, indicators: [], categories: [], offer_mentions: 1,
+      summary: "No scam indicators were found in the transcript. 1 sentence(s) offered or asked about sending money from the speaker's side, which is not counted as a request for money.",
+    }
+    const html = render({ ...base, intent, recommendations: { state: 'none_detected', headline: 'No suspicious indicators were detected in the analyzed transcript.', detail: null, items: [], general: [] } })
+    expect(html).toContain("offered or asked about sending money from the speaker&#x27;s side")
+    expect(html).not.toContain('Pause any payment')
+    expect(html).not.toContain('Do this first')
   })
 })

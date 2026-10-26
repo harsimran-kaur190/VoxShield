@@ -1,0 +1,344 @@
+{
+ "detector": "nli",
+ "false_positives": [
+  "b1",
+  "b2",
+  "b3",
+  "b8",
+  "q2",
+  "q3",
+  "q4",
+  "q5"
+ ],
+ "false_negatives": [],
+ "rows": [
+  {
+   "id": "b1",
+   "kind": "benign",
+   "risk": "elevated",
+   "direct": [
+    "secrecy_isolation"
+   ],
+   "strong": [
+    "secrecy_isolation"
+   ],
+   "suppressed": 0,
+   "error": true
+  },
+  {
+   "id": "b2",
+   "kind": "benign",
+   "risk": "elevated",
+   "direct": [
+    "secrecy_isolation",
+    "verification_bypass"
+   ],
+   "strong": [
+    "secrecy_isolation",
+    "verification_bypass"
+   ],
+   "suppressed": 0,
+   "error": true
+  },
+  {
+   "id": "b3",
+   "kind": "benign",
+   "risk": "elevated",
+   "direct": [
+    "credential_request"
+   ],
+   "strong": [
+    "credential_request"
+   ],
+   "suppressed": 0,
+   "error": true
+  },
+  {
+   "id": "b4",
+   "kind": "benign",
+   "risk": "none_detected",
+   "direct": [],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "b5",
+   "kind": "benign",
+   "risk": "inconclusive",
+   "direct": [],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "b6",
+   "kind": "benign",
+   "risk": "none_detected",
+   "direct": [],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "b7",
+   "kind": "benign",
+   "risk": "none_detected",
+   "direct": [],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "b8",
+   "kind": "benign",
+   "risk": "elevated",
+   "direct": [
+    "verification_bypass"
+   ],
+   "strong": [
+    "verification_bypass"
+   ],
+   "suppressed": 0,
+   "error": true
+  },
+  {
+   "id": "a1",
+   "kind": "ambiguous",
+   "risk": "inconclusive",
+   "direct": [],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "a2",
+   "kind": "ambiguous",
+   "risk": "none_detected",
+   "direct": [],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "a3",
+   "kind": "ambiguous",
+   "risk": "none_detected",
+   "direct": [],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "a4",
+   "kind": "ambiguous",
+   "risk": "weak_signals",
+   "direct": [
+    "urgency"
+   ],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "q1",
+   "kind": "quoted",
+   "risk": "weak_signals",
+   "direct": [],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "q2",
+   "kind": "quoted",
+   "risk": "elevated",
+   "direct": [
+    "credential_request"
+   ],
+   "strong": [
+    "credential_request"
+   ],
+   "suppressed": 0,
+   "error": true
+  },
+  {
+   "id": "q3",
+   "kind": "quoted",
+   "risk": "elevated",
+   "direct": [
+    "payment_pressure"
+   ],
+   "strong": [
+    "payment_pressure"
+   ],
+   "suppressed": 0,
+   "error": true
+  },
+  {
+   "id": "q4",
+   "kind": "quoted",
+   "risk": "elevated",
+   "direct": [
+    "verification_bypass"
+   ],
+   "strong": [
+    "verification_bypass"
+   ],
+   "suppressed": 0,
+   "error": true
+  },
+  {
+   "id": "q5",
+   "kind": "quoted",
+   "risk": "elevated",
+   "direct": [
+    "credential_request"
+   ],
+   "strong": [
+    "credential_request"
+   ],
+   "suppressed": 0,
+   "error": true
+  },
+  {
+   "id": "s1",
+   "kind": "suspicious",
+   "risk": "high",
+   "direct": [
+    "credential_request",
+    "impersonation"
+   ],
+   "strong": [
+    "credential_request"
+   ],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "s2",
+   "kind": "suspicious",
+   "risk": "high",
+   "direct": [
+    "credential_request",
+    "urgency"
+   ],
+   "strong": [
+    "credential_request"
+   ],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "s3",
+   "kind": "suspicious",
+   "risk": "elevated",
+   "direct": [
+    "secrecy_isolation",
+    "verification_bypass"
+   ],
+   "strong": [
+    "secrecy_isolation",
+    "verification_bypass"
+   ],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "s4",
+   "kind": "suspicious",
+   "risk": "elevated",
+   "direct": [
+    "verification_bypass"
+   ],
+   "strong": [
+    "verification_bypass"
+   ],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "s5",
+   "kind": "suspicious",
+   "risk": "high",
+   "direct": [
+    "payment_pressure",
+    "urgency"
+   ],
+   "strong": [
+    "payment_pressure"
+   ],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "s6",
+   "kind": "suspicious",
+   "risk": "elevated",
+   "direct": [
+    "remote_access"
+   ],
+   "strong": [
+    "remote_access"
+   ],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "s7",
+   "kind": "suspicious",
+   "risk": "high",
+   "direct": [
+    "credential_request",
+    "verification_bypass"
+   ],
+   "strong": [
+    "credential_request",
+    "verification_bypass"
+   ],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "s8",
+   "kind": "suspicious",
+   "risk": "elevated",
+   "direct": [
+    "credential_request"
+   ],
+   "strong": [
+    "credential_request"
+   ],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "s9",
+   "kind": "suspicious",
+   "risk": "elevated",
+   "direct": [
+    "credential_request"
+   ],
+   "strong": [
+    "credential_request"
+   ],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "s10",
+   "kind": "suspicious",
+   "risk": "elevated",
+   "direct": [
+    "secrecy_isolation",
+    "verification_bypass"
+   ],
+   "strong": [
+    "secrecy_isolation",
+    "verification_bypass"
+   ],
+   "suppressed": 0,
+   "error": false
+  }
+ ]
+}

@@ -53,7 +53,7 @@ def intent_with(*indicators: IntentIndicator, risk: str = "elevated") -> IntentA
         ("This is the fraud department of your bank calling about some activity on the card ending in four four two one.", "organization"),
         ("A warrant has been issued and you will be arrested if you do not call this number back immediately, ma'am.", "pressure"),
         ("Please do not tell anyone about this call, and keep this between us until everything has been fully resolved.", "secrecy"),
-        ("No need to call your bank, we are handling everything for you here, so just stay with me on this call now.", "secrecy"),
+        ("No need to call your bank, we are handling everything for you here, so just stay with me on this call now.", "verify"),
     ],
 )
 def test_each_category_produces_its_action_with_evidence_from_the_transcript(text, expected):
@@ -203,3 +203,100 @@ def test_indicator_ids_match_the_frontend_key_scheme():
 
 def test_the_plan_is_deterministic():
     assert plan(SCAM).model_dump() == plan(SCAM).model_dump()
+
+
+# ---- Stage 3: evidence to action ------------------------------------------------------------------------------------
+# Seven realistic situations. The scam-intent results are built directly (as the detectors would return them) so each
+# test checks only how findings become actions.
+
+from app.services.recommendations import GENERAL_VERIFY, VOICE_ONLY_HEADLINE  # noqa: E402
+
+
+def ok_transcript(text: str = "Hello, this is a message about your account.") -> TranscriptResult:
+    return transcript_of(text)
+
+
+def test_scenario_1_a_genuine_otp_request_leads_with_do_not_share_and_cites_the_sentence():
+    text = "Tell me your OTP immediately so I can stop your account from being blocked."
+    result = build_recommendations(voice(), intent_from(text), transcript_of(text))
+    first = result.items[0]
+    assert (first.id, first.basis, first.priority) == ("credentials", "finding", "high")
+    assert "Don't share" in first.title and first.why and first.evidence[0].source == "intent"
+    assert result.general == []  # the finding is enough; no extra generic card
+
+
+def test_scenario_2_a_protective_awareness_message_gets_no_scam_action_only_an_optional_general_precaution():
+    held_back = IntentAssessment(risk="none_detected", summary="No scam indicators were found in the transcript.", suppressed_mentions=2)
+    result = build_recommendations(voice(), held_back, ok_transcript())
+    assert result.state == "none_detected" and result.items == []
+    assert [g.id for g in result.general] == ["general_verify"] and result.general[0].basis == "general"
+    assert "not a result of this analysis" in (result.general[0].why or "")
+
+
+def test_scenario_3_a_possibly_synthetic_voice_with_harmless_content_does_not_become_scam_advice():
+    benign = "Hi, your parcel will arrive on Tuesday afternoon between two and four, please be home to sign for it, thank you."
+    result = build_recommendations(voice("model_favors_fake", favoring=3), intent_from(benign), transcript_of(benign))
+    assert result.headline == VOICE_ONLY_HEADLINE and [i.basis for i in result.items] == ["voice"]
+    text = " ".join([result.headline, *(i.title + i.detail + (i.why or "") for i in result.items)]).lower()
+    assert "not as a sign of a scam" in text and "proof" in text
+    for word in ("payment", "code", "password", "fraud", "scammer", "hang up"):
+        assert word not in text.replace("not as a sign of a scam", "")
+
+
+def test_scenario_4_a_payment_request_leads_with_independent_verification():
+    text = "You must transfer two thousand dollars to the account I will give you, and you have to buy gift cards today."
+    first = build_recommendations(voice(), intent_from(text), transcript_of(text)).items[0]
+    assert first.id == "payment" and "trusted contact method" in first.detail and first.basis == "finding"
+
+
+def test_scenario_5_an_ambiguous_bank_notification_gets_ordinary_verification_without_asserting_fraud():
+    inconclusive = IntentAssessment(risk="inconclusive", summary="The model found passages it could not classify with enough confidence.")
+    result = build_recommendations(voice(), inconclusive, ok_transcript("We noticed some unusual activity on your card."))
+    assert result.state == "insufficient" and result.items == []
+    assert result.general == [GENERAL_VERIFY]
+    spoken = (result.headline + (result.detail or "") + GENERAL_VERIFY.title + GENERAL_VERIFY.detail).lower()
+    for word in ("scam", "fraud", "fake"):
+        assert word not in spoken
+
+
+def test_scenario_6_a_protective_warning_followed_by_a_request_still_leads_with_the_request():
+    warning = indicator(id="nli_secrecy-0", rule_id="nli_secrecy", category="secrecy_isolation", severity="medium", excerpt="Never share your code")
+    request = indicator(id="nli_credential_request-60", rule_id="nli_credential_request", category="credential_request", severity="high", char_start=60, char_end=100, excerpt="read me the code that just arrived")
+    held = IntentAssessment(risk="high", summary="stub", indicators=[request], suppressed_mentions=1)  # the warning was held back
+    result = build_recommendations(voice(), held, ok_transcript())
+    assert result.items[0].id == "credentials" and result.items[0].evidence[0].label == "read me the code that just arrived"
+    assert warning.excerpt not in [e.label for i in result.items for e in i.evidence]
+
+
+def test_scenario_7_no_relevant_evidence_gives_no_advice_and_no_generic_filler():
+    for transcript in (TranscriptResult(status="no_speech"), TranscriptResult(status="unavailable", error="x"), None):
+        result = build_recommendations(voice("inconclusive"), IntentAssessment(risk="inconclusive", summary="No usable transcript."), transcript)
+        assert result.state == "insufficient" and result.items == [] and result.general == []
+
+
+def test_a_discouraged_check_gets_its_own_trusted_channel_action_ahead_of_secrecy():
+    text = "No need to call your bank, we are handling everything for you here, and please do not tell anyone about this call at all."
+    result = plan(text)
+    assert ids(result)[0] == "verify" and "secrecy" in ids(result)
+    assert "already had" in result.items[0].detail
+
+
+def test_scam_derived_advice_is_never_outranked_by_the_voice_item():
+    weak = indicator(severity="low", category="urgency", rule_id="urgency")
+    result = build_recommendations(voice("model_favors_fake", favoring=3), intent_with(weak, risk="weak_signals"))
+    assert [i.basis for i in result.items] == ["finding", "voice"]
+
+
+def test_every_recommendation_says_what_it_is_based_on():
+    result = plan(SCAM, verdict="model_favors_fake")
+    assert {i.basis for i in result.items} == {"finding", "voice"}
+    assert all(i.why for i in result.items)
+
+
+def test_a_voice_only_plan_for_an_ambiguous_message_still_offers_the_general_precaution():
+    inconclusive = IntentAssessment(risk="inconclusive", summary="Could not decide.")
+    result = build_recommendations(voice("model_favors_fake", favoring=1), inconclusive, ok_transcript())
+    assert [i.basis for i in result.items] == ["voice"] and result.general == [GENERAL_VERIFY]
+    # a scam finding makes the general precaution unnecessary
+    request = indicator(category="credential_request", severity="high")
+    assert build_recommendations(voice("model_favors_fake", favoring=1), intent_with(request), ok_transcript()).general == []

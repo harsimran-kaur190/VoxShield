@@ -41,6 +41,10 @@ remain available and are never mixed with the model. On 168 synthetic, developer
 F1 0.815 versus 0.525 for the rules on the 93 held-out examples (95% interval of the difference +0.12 to +0.47), with
 the rules better on benign negated and legitimate-urgent cases. That says nothing about real calls. Method, error
 analysis, and every caveat are in [`backend/evaluation/RESULTS.md`](backend/evaluation/RESULTS.md).
+Protective advice ("Never share your PIN..."), quoted or narrated scams, and mixed messages are handled by extra
+per-sentence checks described in `backend/evaluation/RESULTS.md` ("Follow-up: protective advice..."); sentences held back
+as protective are counted in the result and disclosed in its summary, and a warning in one clause never hides a request
+in another. This was checked on small synthetic sets only.
 The model adds a 369 MB download, about 0.7 GB of memory, and about 0.6 s per short request.
 
 ## Requirements
@@ -140,9 +144,26 @@ Upload errors return `{"detail": {"code": "...", "message": "..."}}` with status
 
 See `backend/.env.example`. Common settings: `VOXSHIELD_WHISPER_MODEL_SIZE` (`base` is faster, `small` is more accurate), `VOXSHIELD_VOICE_MODEL_ID`, `VOXSHIELD_PRELOAD_MODELS` (now on by default, loads both models in parallel at startup), `VOXSHIELD_MAX_CONCURRENT_ANALYSES` (default 4; extra requests get a 503 `busy`). If you change the voice model ID, the pinned revision is ignored unless you also set `VOXSHIELD_VOICE_MODEL_REVISION`. Labels are mapped by name from the model config, and the model must expose exactly one real and one fake label.
 
+## Scam Scenario Lab
+
+`/lab` offers six short situations (a protective notice, a verification-code request, an urgent payment request, a caller discouraging verification, a harmless message in a synthetic voice, and an ambiguous bank notice). Each is a script read by a computer-generated voice and saved as a small FLAC file in `frontend/public/lab/` (about 1.3 MB in total). They are labelled as synthetic samples, not real calls, and the scripts are labelled as scripts. Choosing "Analyze this sample" sends the audio through the same `/analysis/stream` endpoint and results page as an uploaded file, so every finding, score, and recommendation comes from the backend. The scenario text only says what is being tested and what to look at, never what will be found. A closing panel lists what that result can and cannot show, chosen from the report that came back. "Use your own recording instead" returns to the normal upload page. The samples do not measure accuracy: they show how the checks behave on situations the authors thought of. To regenerate them on macOS, use `say -v Samantha` with the script text in `frontend/src/lib/scenarios.ts` and `afconvert -f flac -d flac@16000 -c 1`.
+
+## Next steps shown to the user
+
+The results page opens with **What should I do next?**: the single most relevant action. Each recommendation says what it follows from: a **finding** in the recording (with the quoted sentence), **the voice model only** (which never produces scam-specific advice), or a **general precaution** that does not depend on the analysis. Order: advice that follows from a scam finding comes first (higher priority, then more supporting findings, then codes before payments before the rest); the voice item always comes last. When nothing specific was found, the page says so and may offer one labelled general precaution. The advice is fixed text chosen by category, never generated from the transcript.
+
 ## Privacy
 
-Recordings are held in browser memory until you press Analyze and are never written to browser storage. Uploads are streamed into a temporary directory, analyzed in memory, and deleted when the analysis ends, including on errors. The results page plays the analyzed recording from the copy already in your browser (the file you chose or the recording you made); it is not uploaded again, not saved, and its object URL is revoked when you leave the results. Audio and transcripts are never stored or logged (logs contain only exception class names). Upload folders left by a crashed process are swept at startup. There is no history. Only model files are downloaded, from Hugging Face.
+What was checked, and how (Stage 6 audit, against a running server):
+
+- **Browser.** Recordings are held in browser memory until you press Analyze. The app uses no `localStorage`, `sessionStorage`, IndexedDB, or cookies. The results page plays the analyzed recording from the copy already in your browser; its object URL is revoked when you leave the results, and the microphone is released when you leave the page or stop. Leaving the page while an analysis runs aborts the request.
+- **Server files.** The audio is written to disk in two temporary places while it is processed: the web framework spools any upload larger than 1 MB to a temporary file as it arrives (before any validation runs), and the app then copies it into a `voxshield-*` folder for decoding. After success, validation failure, decode failure, an oversized upload, and a client that disconnected mid-analysis, no upload folder or spool file remained. Folders left by a crashed process are swept at startup.
+- **Not a secure erase.** Deleted files are not overwritten, and the operating system may keep their contents in caches or swap. In Docker Compose `/tmp` is memory-backed, which keeps the audio off the container's filesystem but does not stop the host from swapping memory to disk.
+- **Memory.** The decoded audio and the transcript exist in memory for the length of the request and are returned to your browser. There is no database and no history.
+- **Logs.** The application logs error class names only, never audio, transcripts, or file names. The server's access log records the client address, path, and status code, and the rate limiter keeps client addresses in memory for up to a minute.
+- **Network.** The page itself contacts only its own server. Model files are downloaded once from Hugging Face; VoxShield has not verified what the Hugging Face client sends along with those downloads, so set `HF_HUB_DISABLE_TELEMETRY=1`, and `HF_HUB_OFFLINE=1` once the models are cached (the Docker image sets both).
+
+Not covered: the host, its backups, its swap, or any logging outside this application.
 
 ## Limitations
 
@@ -151,7 +172,7 @@ Recordings are held in browser memory until you press Analyze and are never writ
 - Scam detection is English-only, finds indicators rather than intent, and depends on transcription accuracy. The language model flags whole sentences, still mistakes negated advice and quoted scams for requests, and returns *inconclusive* on roughly one held-out example in five. It was evaluated only on synthetic text.
 - A genuine voice does not make a call safe, and a synthetic voice does not prove fraud.
 - Analysis runs on CPU (M-series Mac, 10 cores, 16 GB). Measured on an 11.0 s clip: about 2.5 s warm (about 2.0 s of it Whisper), 2.6 s on the first request after preload, 4.9 s on a cold first request with no preload (2.3 s of it model loading). A first cold run earlier measured 8.9 s, so cold numbers vary with the OS file cache. A 9.9-minute recording took about 237 to 245 s, almost all in Whisper. A first run that downloads models adds download time.
-- In-browser recording is not implemented yet.
+- In-browser recording captures only what the device microphone hears; it cannot capture a phone call's audio directly.
 
 ## Project layout
 

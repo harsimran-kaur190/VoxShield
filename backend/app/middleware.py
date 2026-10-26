@@ -1,6 +1,7 @@
 """Request guards, written as plain ASGI middleware so streaming responses are never buffered or interrupted."""
 
 import json
+import logging
 import threading
 import time
 from collections import OrderedDict, deque
@@ -11,6 +12,8 @@ Scope = MutableMapping[str, Any]
 Message = MutableMapping[str, Any]
 Receive = Callable[[], Awaitable[Message]]
 Send = Callable[[Message], Awaitable[None]]
+
+logger = logging.getLogger("voxshield.guard")
 
 BODY_OVERHEAD_BYTES = 1024 * 1024
 LIMITED_PREFIXES = ("/api/v1/analysis", "/api/v1/uploads")
@@ -57,6 +60,10 @@ class ApiGuard:
     """Rejects oversized bodies and floods early, and marks every API response as private and uncacheable.
 
     Responses can contain a transcript, so they must never be stored by a browser cache, CDN, or proxy.
+
+    The request body is counted as it arrives, not only by its declared Content-Length. A chunked body has no declared
+    length, and the framework would otherwise receive and spool all of it to disk before any size check in a route ran.
+    Unexpected errors are answered here too, so they carry the same headers and are logged by class name only.
     """
 
     def __init__(self, app: Callable[[Scope, Receive, Send], Awaitable[None]], max_upload_bytes: int, requests_per_minute: int):
@@ -88,11 +95,46 @@ class ApiGuard:
                 await send(body)
                 return
 
+        body = {"received": 0, "rejected": False}
+        state = {"started": False}
+
+        async def respond(status: int, code: str, message: str) -> None:
+            start, payload = _json(status, code, message, [(b"cache-control", b"no-store"), (b"x-content-type-options", b"nosniff"), (b"referrer-policy", b"no-referrer")])
+            state["started"] = True
+            await send(start)
+            await send(payload)
+
+        async def counted_receive() -> Message:
+            if body["rejected"]:
+                return {"type": "http.disconnect"}
+            message = await receive()
+            if message["type"] == "http.request" and method == "POST" and path.startswith(LIMITED_PREFIXES):
+                body["received"] += len(message.get("body", b""))
+                if body["received"] > self.max_body:
+                    # Stop reading: answer now and tell the application the client is gone, so nothing more is spooled.
+                    body["rejected"] = True
+                    if not state["started"]:
+                        await respond(413, "file_too_large", f"File exceeds the {self.max_upload_mb} MB limit.")
+                    return {"type": "http.disconnect"}
+            return message
+
         async def guarded_send(message: Message) -> None:
-            if message["type"] == "http.response.start" and path.startswith("/api/"):
-                existing = {k.lower() for k, _ in message["headers"]}
-                extra = [(b"cache-control", b"no-store"), (b"x-content-type-options", b"nosniff"), (b"referrer-policy", b"no-referrer")]
-                message["headers"] = [*message["headers"], *[h for h in extra if h[0] not in existing]]
+            if body["rejected"]:
+                return  # the 413 has been sent; whatever the application now tries to send is discarded
+            if message["type"] == "http.response.start":
+                state["started"] = True
+                if path.startswith("/api/"):
+                    existing = {k.lower() for k, _ in message["headers"]}
+                    extra = [(b"cache-control", b"no-store"), (b"x-content-type-options", b"nosniff"), (b"referrer-policy", b"no-referrer")]
+                    message["headers"] = [*message["headers"], *[h for h in extra if h[0] not in existing]]
             await send(message)
 
-        await self.app(scope, receive, guarded_send)
+        try:
+            await self.app(scope, counted_receive, guarded_send)
+        except Exception as error:
+            if body["rejected"]:
+                return  # the application only noticed the dropped connection
+            logger.error("Unhandled error: %s", type(error).__name__)  # class name only: messages can contain user text
+            if state["started"]:
+                raise
+            await respond(500, "server_error", "Something went wrong on the server.")

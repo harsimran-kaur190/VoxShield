@@ -23,10 +23,12 @@ from app.config import Settings
 from app.schemas_analysis import IntentAssessment, IntentIndicator, ModelInfo, TranscriptResult
 from app.services.interfaces import ComponentFailure
 from app.services.scam_intent import summarize_direct, segment_at
-from app.services.scam_rules import split_sentences
+from app.services.scam_rules import QUOTE_MARKS, REPORTING, split_sentences
+import re
 
 logger = logging.getLogger("voxshield.scam_nli")
 
+LOW_TRANSCRIPTION_LOGPROB = -1.0  # Whisper's own rule of thumb for an unreliable segment
 MIN_WORDS_PER_SENTENCE = 3
 MIN_WORDS_FOR_NEGATIVE = 12
 MAX_CONTEXT_WORDS = 80
@@ -46,7 +48,9 @@ HYPOTHESES: tuple[Hypothesis, ...] = (
     Hypothesis(
         "credential_request", "credential_request", "high",
         (
-            "The text asks the listener to share a verification code, password, or bank details.",
+            # Worded around the act of asking the listener to hand something over. The earlier wording ("The text asks the
+            # listener to share ... bank details") was entailed by any sentence that merely mentioned a bank account.
+            "The speaker is asking the listener to tell them or give them a code, password, PIN, or bank details.",
             "The speaker asks the listener to read out a code that was sent to them.",
         ),
         "The model judged that this sentence asks for a code, PIN, password, or card detail. Legitimate organizations do not ask you to read these out.",
@@ -127,6 +131,83 @@ HYPOTHESES: tuple[Hypothesis, ...] = (
 REPORTED_TEXTS = (
     "The speaker is talking about scams in general.",
     "The speaker is giving an example or a hypothetical scenario.",
+)
+# Protective advice: telling the listener NOT to share a secret, or to verify through official channels. An NLI model
+# reads "Never share your PIN" as entailing "tells the listener not to verify / keep a secret", because it is a
+# prohibition. These statements detect the sentence as protective so those two confusable categories can be held back.
+PROTECTIVE_TEXTS = (
+    "The speaker is warning the listener never to share a code, password, or PIN.",
+    "The speaker is advising the listener to verify things through official channels.",
+    "The speaker is telling the listener to be suspicious of anyone who asks for their code, password, or PIN.",
+)
+# Who sends the money. The payment statements say nothing about direction, so "Can I send you some money?" scored 0.97
+# on "The speaker is asking the listener to send money". This statement separates offers (0.66 to 0.94) from requests
+# (at most 0.28) in the probe set, but it misses some offers and is only ever used to make a sentence uncertain, never to
+# hide a request. Hiding needs the grammatical cues below.
+DIRECTION_TEXTS = ("The speaker is the one who would send the money.",)
+_SEND = r"(?:send|transfer|wire|pay|deposit|remit|give|lend|cover|settle|reimburse|refund)"
+_SENT = r"(?:send|sent|transfer|transferred|wire|wired|pay|paid|deposit|deposited|give|gave|lend|lent|cover|covered|reimburse|refund)"
+# The listener is asked to send or pay: "can you ...", "please ...", "I need you to ...", "you must ...", "send me ...".
+LISTENER_SENDS = re.compile(
+    rf"\b(?:can|could|would|will|may)\s+you\b(?!\s+(?:like|want)\s+me\s+to)(?:\s+\w+){{0,3}}?\s+{_SEND}\b"
+    rf"|\b(?:please|kindly)\b(?:\s+\w+){{0,2}}?\s+{_SEND}\b"
+    r"|\b(?:i|we)\s+(?:need|want|require|expect)\s+you\s+to\b"
+    rf"|\byou\s+(?:must|need\s+to|have\s+to|should|will|are\s+required\s+to|'ll|'re\s+going\s+to)\b(?:\s+\w+){{0,3}}?\s+{_SEND}\b"
+    rf"|(?:^|[,;:.!?]\s*)(?:and\s+|then\s+|now\s+|just\s+)?{_SEND}\b"
+    rf"|\byou\s+(?:\w+\s+){{0,2}}?(?:wire|send|transfer|pay)\s+(?:me|us|back)\b",
+    re.IGNORECASE,
+)
+# The speaker would send or pay: "can I ...", "should I ...", "do you want me to ...", "let me ...", "I can ...", "if I sent ...".
+SPEAKER_SENDS = re.compile(
+    rf"\b(?:can|could|may|might|should|shall|would|will)\s+i\b(?:\s+\w+){{0,2}}?\s+{_SEND}\b"
+    rf"|\b(?:want|like)\s+me\s+to\b(?:\s+\w+){{0,2}}?\s+{_SEND}\b"
+    rf"|\blet\s+me\b(?:\s+\w+){{0,2}}?\s+{_SEND}\b"
+    rf"|\bi(?:'ll|'d|\s+(?:can|could|will|would|shall|may|might)|\s*(?:am|'m)\s+(?:going|happy|willing|ready|able)\s+to)\s+(?:\w+\s+){{0,2}}?{_SEND}\b"
+    rf"|\bif\s+i\s+(?:\w+\s+){{0,2}}?{_SENT}\b",
+    re.IGNORECASE,
+)
+# "we" can mean either side, so direction cannot be read from the sentence.
+SHARED_SENDS = re.compile(rf"\b(?:can|could|should|shall|may|might|would|will)\s+we\b(?:\s+\w+){{0,2}}?\s+{_SEND}\b|\blet(?:'s|\s+us)\s+(?:\w+\s+){{0,2}}?{_SEND}\b", re.IGNORECASE)
+
+
+# "I need money" is a statement of need, not an instruction to send money, and the language model cannot tell the two
+# apart. The rule engine already rates this wording as a low signal ("friends and family ask this too"). Only this
+# recognised wording is lowered: an amount, a deadline, or "I need you to ..." keeps its severity.
+NEED_STATEMENT = re.compile(
+    r"\b(?:i|we)\s+(?:\w+\s+)?(?:need|require|am\s+short\s+of|'m\s+short\s+of|could\s+use)\s+(?!you\s+to\b)"
+    r"(?:some\s+|more\s+|a\s+little\s+|a\s+bit\s+of\s+)?(?:money|cash|funds)\b",
+    re.IGNORECASE,
+)
+
+
+def payment_direction(text: str) -> str | None:
+    """Who sends the money, read from the grammar of this text: "listener", "speaker", "shared", or None when it
+    cannot be told. A request to the listener always wins, so an offer in the same clause never hides it."""
+    if LISTENER_SENDS.search(text):
+        return "listener"
+    if SPEAKER_SENDS.search(text):
+        return "speaker"
+    if SHARED_SENDS.search(text):
+        return "shared"
+    return None
+
+
+# Only categories that a prohibition can be mistaken for. A protective sentence never hides a credential, payment, or
+# remote-access request, so a mixed message still exposes the request.
+PROTECTIVE_GATED = frozenset({"secrecy", "verification_bypass", "credential_request", "org_claim"})  # org_claim: warnings describe impersonators
+# Protective advice also scores high on credential_request ("Keep your passcode private" is about a passcode), but a
+# request for a secret is the most serious category, so it needs stronger evidence of protective advice to be held back.
+PROTECTIVE_STRICT = frozenset({"credential_request"})
+# "Please do not give it to anyone": "it" only means something with the sentence before, so judge it in context.
+ANAPHORIC_OBJECT = re.compile(r"\b(?:share|give|tell|disclose|reveal|send|read|pass|hand)\s+it\b", re.IGNORECASE)
+# Structural cues that a sentence narrates or explains a scam instead of making the request. They look at how the
+# sentence is framed, not at scam vocabulary. Combined with the rule engine's REPORTING and quote-mark checks.
+NARRATION = re.compile(
+    r"\b(?:in\s+(?:this|that|a\s+(?:typical|common)|many|most|these)\s+scams?|(?:this|that|such\s+a)\s+scam\s+(?:works?|starts?|begins?)|"
+    r"how\s+(?:the\s+|these\s+)?scams?\s+work|(?:scam|phishing)\s+(?:call|message|email|text)s?\s+(?:often\s+|typically\s+|usually\s+)?(?:says?|asks?)|"
+    r"(?:scammers?|fraudsters?|callers?|criminals?)\s+(?:often|sometimes|typically|usually|commonly|may|might|will)\b|pretends?\s+to\s+be|"
+    r"(?:email|text|message|letter)\s+(?:I\s+)?(?:received|got)\b)",
+    re.IGNORECASE,
 )
 SCORE_NOTE = (
     "Each score is the probability an NLI model assigns to 'entailment' for one sentence and one statement about the "
@@ -242,6 +323,10 @@ class SentenceScores:
     context_start: int | None = None  # start of the previous sentence when a with-context premise was scored
     with_context: dict[str, float] | None = None  # the same scores for "previous sentence + this sentence"
     reported_context: float | None = None
+    protective_alone: float = 0.0  # highest protective-advice statement for this sentence by itself
+    protective_context: float | None = None
+    sender_alone: float = 0.0  # entailment for "the speaker is the one who would send the money", this sentence alone
+    sender_context: float | None = None
 
 
 @dataclass
@@ -255,10 +340,39 @@ class Thresholds:
     finding: float
     uncertain: float
     reported: float
+    # How strongly a sentence must score as protective advice before it holds back secrecy / verification findings.
+    protective: float = 0.90
+    # Lower bar for a finding in a sentence that is visibly narrated ("he asked me to ...", "in this scam ..."). It is
+    # always shown as reported speech with low severity, so a lower bar cannot raise the risk level.
+    reported_finding: float = 0.80
+    protective_strict: float = 0.95
+    # A payment finding whose direction the grammar does not show, but which the model reads as the speaker sending, is
+    # treated as uncertain rather than as a request. It never hides a finding the grammar shows to be a request.
+    sender: float = 0.85
 
     @classmethod
     def from_settings(cls, s: Settings) -> "Thresholds":
-        return cls(s.scam_nli_threshold, s.scam_nli_uncertain_threshold, s.scam_nli_reported_threshold)
+        return cls(s.scam_nli_threshold, s.scam_nli_uncertain_threshold, s.scam_nli_reported_threshold, s.scam_nli_protective_threshold, s.scam_nli_reported_finding_threshold, s.scam_nli_protective_strict_threshold, s.scam_nli_sender_threshold)
+
+
+CLAUSE_SPLIT = re.compile(
+    r"\s*;\s+|,?\s+(?:but|however|although|though)\b,?\s+"
+    # ", and also never share ...": a second instruction starts here, so advice in it must not color the first one
+    r"|,\s+(?:and|so)\s+(?:also\s+)?(?=(?:never|do\s+not|don't|always|please|keep|make\s+sure|read|tell|give|send|share|provide|transfer|wire|pay|install|confirm|enter|stay|you\s+(?:must|should|need))\b)",
+    re.IGNORECASE,
+)
+
+
+def split_clauses(text: str, start: int, end: int) -> list[tuple[int, int]]:
+    """Split a sentence at "but", "however", "although" or a semicolon, so advice in one clause cannot color a request
+    in the next. A split is only made when both sides are long enough to be scored on their own."""
+    spans, cursor = [], start
+    for match in CLAUSE_SPLIT.finditer(text, start, end):
+        if len(text[cursor : match.start()].split()) >= MIN_WORDS_PER_SENTENCE and len(text[match.end() : end].split()) >= MIN_WORDS_PER_SENTENCE:
+            spans.append((cursor, match.start()))
+            cursor = match.end()
+    spans.append((cursor, end))
+    return spans
 
 
 def build_windows(text: str) -> list[tuple[int, int, int | None, str | None]]:
@@ -267,7 +381,7 @@ def build_windows(text: str) -> list[tuple[int, int, int | None, str | None]]:
     The context premise is the previous sentence plus this one. It is only used to resolve references such as "it"
     or "that code"; a finding is attributed to the sentence itself whenever the sentence supports it alone.
     """
-    spans = split_sentences(text)
+    spans = [clause for start, end in split_sentences(text) for clause in split_clauses(text, start, end)]
     windows: list[tuple[int, int, int | None, str | None]] = []
     for index, (start, end) in enumerate(spans):
         sentence = text[start:end]
@@ -281,6 +395,16 @@ def build_windows(text: str) -> list[tuple[int, int, int | None, str | None]]:
                 context_start, premise = prev_start, f"{previous} {sentence}"
         windows.append((start, end, context_start, premise))
     return windows
+
+
+def _low_confidence(transcript: TranscriptResult, segment_index: int | None) -> bool:
+    segment = next((s for s in transcript.segments if s.index == segment_index), None)
+    return segment is not None and segment.avg_logprob is not None and segment.avg_logprob < LOW_TRANSCRIPTION_LOGPROB
+
+
+def _narrates(sentence: str) -> bool:
+    """True when the sentence is framed as quoted, recounted, or explained speech rather than a request to the listener."""
+    return len(QUOTE_MARKS.findall(sentence)) >= 2 or bool(REPORTING.search(sentence)) or bool(NARRATION.search(sentence))
 
 
 class NliScamIntentAnalyzer:
@@ -310,7 +434,7 @@ class NliScamIntentAnalyzer:
     def score(self, text: str) -> ScoredTranscript:
         windows = build_windows(text)
         statements = [(h.key, i, t) for h in HYPOTHESES for i, t in enumerate(h.texts)]
-        texts = [t for _, _, t in statements] + list(REPORTED_TEXTS)
+        texts = [t for _, _, t in statements] + list(REPORTED_TEXTS) + list(PROTECTIVE_TEXTS) + list(DIRECTION_TEXTS)
         per_premise = len(texts)
         budget = max(1, self._settings.scam_max_pairs // (2 * per_premise))
         skipped = max(0, len(windows) - budget)
@@ -323,20 +447,27 @@ class NliScamIntentAnalyzer:
                 premises.append(context_premise)
         scores = self._model.entailment([(premise, statement) for premise in premises for statement in texts])
 
-        def row(index: int) -> tuple[dict[str, float], float]:
+        def row(index: int) -> tuple[dict[str, float], float, float, float]:
             values = scores[index * per_premise : (index + 1) * per_premise]
             by_statement = {f"{key}:{i}": values[k] for k, (key, i, _) in enumerate(statements)}
-            return by_statement, max(values[len(statements) :])
+            tail = values[len(statements) :]
+            r, p = len(REPORTED_TEXTS), len(PROTECTIVE_TEXTS)
+            return by_statement, max(tail[:r]), max(tail[r : r + p]), max(tail[r + p :])
 
         sentences, cursor = [], 0
         for start, end, context_start, context_premise in windows:
-            alone, reported_alone = row(cursor)
+            alone, reported_alone, protective_alone, sender_alone = row(cursor)
             cursor += 1
-            with_context = reported_context = None
+            with_context = reported_context = protective_context = sender_context = None
             if context_premise is not None:
-                with_context, reported_context = row(cursor)
+                with_context, reported_context, protective_context, sender_context = row(cursor)
                 cursor += 1
-            sentences.append(SentenceScores(start, end, text[start:end], alone, reported_alone, context_start, with_context, reported_context))
+            sentences.append(
+                SentenceScores(
+                    start, end, text[start:end], alone, reported_alone, context_start, with_context, reported_context,
+                    protective_alone, protective_context, sender_alone, sender_context,
+                )
+            )
         return ScoredTranscript(sentences, skipped)
 
     # step 2: cheap, deterministic, and re-runnable with other thresholds
@@ -344,36 +475,67 @@ class NliScamIntentAnalyzer:
         t = thresholds or self.thresholds
         found: list[IntentIndicator] = []
         uncertain = 0
+        suppressed = 0
+        offers = 0
         previous: SentenceScores | None = None
         for sentence in scored.sentences:
             unsure = False
             for h in HYPOTHESES:
                 alone_best = max(range(len(h.texts)), key=lambda i: sentence.alone[f"{h.key}:{i}"])
                 alone = sentence.alone[f"{h.key}:{alone_best}"]
-                span = None  # (start, end, score, statement index, reported score)
-                if alone >= t.finding:
-                    span = (sentence.start, sentence.end, alone, alone_best, sentence.reported_alone)
+                span = None  # (start, end, score, statement index, reported score, protective score)
+                narrated = _narrates(transcript.text[sentence.start : sentence.end])
+                if alone >= (t.reported_finding if narrated else t.finding):
+                    span = (sentence.start, sentence.end, alone, alone_best, sentence.reported_alone, sentence.protective_alone)
                 elif sentence.with_context is not None and sentence.context_start is not None:
                     ctx_best = max(range(len(h.texts)), key=lambda i: sentence.with_context[f"{h.key}:{i}"])
                     ctx = sentence.with_context[f"{h.key}:{ctx_best}"]
                     prev_alone = max(previous.alone[f"{h.key}:{i}"] for i in range(len(h.texts))) if previous else 0.0
                     # Only the two sentences together support it, and the previous one does not already carry it.
-                    if ctx >= t.finding and prev_alone < t.finding:
-                        span = (sentence.context_start, sentence.end, ctx, ctx_best, sentence.reported_context or 0.0)
+                    narrated_ctx = _narrates(transcript.text[sentence.context_start : sentence.end])
+                    if ctx >= (t.reported_finding if narrated_ctx else t.finding) and prev_alone < t.finding:
+                        inherited = previous.protective_alone if previous and alone < t.uncertain else 0.0  # support comes only from the earlier sentence
+                        span = (sentence.context_start, sentence.end, ctx, ctx_best, sentence.reported_context or 0.0, max(sentence.protective_alone, inherited))
+                        narrated = narrated_ctx
                 if span is None:
                     top = max(alone, max((sentence.with_context or {}).get(f"{h.key}:{i}", 0.0) for i in range(len(h.texts))))
-                    unsure = unsure or top >= t.uncertain
+                    # A protective sentence that partly resembles a gated category is explained, not uncertain.
+                    inherits = previous is not None and previous.protective_alone >= t.protective and alone < t.uncertain
+                    explained = h.key in PROTECTIVE_GATED and (sentence.protective_alone >= t.protective or inherits)
+                    if h.key == "payment_request" and top >= t.uncertain:
+                        own = payment_direction(transcript.text[sentence.start : sentence.end])
+                        if own == "speaker":
+                            explained = True  # the speaker is the one who would send money: an offer, not a request
+                            offers += 1
+                        elif own is None and previous is not None and alone < t.uncertain and payment_direction(transcript.text[previous.start : previous.end]) == "speaker":
+                            explained = True  # the payment reading comes only from the offer in the sentence before (already counted)
+                    unsure = unsure or (top >= t.uncertain and not explained)
                     continue
-                start, end, value, best, reported_score = span
-                reported = reported_score >= t.reported
+                start, end, value, best, reported_score, protective_score = span
+                if sentence.protective_context is not None and ANAPHORIC_OBJECT.search(transcript.text[sentence.start : sentence.end]):
+                    protective_score = max(protective_score, sentence.protective_context)
+                if h.key in PROTECTIVE_GATED and protective_score >= (t.protective_strict if h.key in PROTECTIVE_STRICT else t.protective):
+                    suppressed += 1  # counted and reported, never silently dropped
+                    continue
+                if h.key == "payment_request" and not narrated:
+                    direction = payment_direction(transcript.text[start:end])
+                    sender = sentence.sender_alone if start == sentence.start else max(sentence.sender_context or 0.0, sentence.sender_alone)
+                    if direction == "speaker":
+                        offers += 1  # an offer to send money is not a request for money; it is counted and disclosed
+                        continue
+                    if direction == "shared" or (direction is None and sender >= t.sender):
+                        unsure = True  # who sends and who receives cannot be established, so no direction is asserted
+                        continue
+                reported = reported_score >= t.reported or narrated
                 excerpt = transcript.text[start:end]
+                need = h.key == "payment_request" and not reported and payment_direction(excerpt) is None and bool(NEED_STATEMENT.search(excerpt))
                 segment = segment_at(transcript, start)
                 found.append(
                     IntentIndicator(
                         id=f"nli_{h.key}-{start}",
                         rule_id=f"nli_{h.key}",
                         category=h.category,
-                        severity="low" if reported else h.severity,  # type: ignore[arg-type]
+                        severity="low" if reported or need else h.severity,  # type: ignore[arg-type]
                         segment_index=segment.index if segment else None,
                         char_start=start,
                         char_end=end,
@@ -387,7 +549,8 @@ class NliScamIntentAnalyzer:
                         trigger=(
                             f"Model score {value:.2f} for “{h.texts[best]}”"
                             + (" on this sentence and the one before it." if start != sentence.start else " on this sentence.")
-                            + (" The model also judged it to be a story, example, or advice, so it does not raise the risk level." if reported else "")
+                            + (" The sentence reads as a story, example, or advice rather than a request to you, so it does not raise the risk level." if reported else "")
+                            + (" The wording is a statement of need rather than an instruction to send money, so it is a low signal. People ask for money in ordinary life too." if need else "")
                         ),
                         explanation=h.explanation,
                         suggested_action=h.action,
@@ -396,16 +559,22 @@ class NliScamIntentAnalyzer:
             uncertain += unsure
             previous = sentence
         found.sort(key=lambda i: (i.char_start, i.rule_id))
-        return self._assessment(transcript, found, uncertain, scored.skipped_sentences)
+        return self._assessment(transcript, found, uncertain, scored.skipped_sentences, suppressed, offers)
 
-    def _assessment(self, transcript: TranscriptResult, found: list[IntentIndicator], uncertain: int, skipped: int) -> IntentAssessment:
+    def _assessment(self, transcript: TranscriptResult, found: list[IntentIndicator], uncertain: int, skipped: int, suppressed: int = 0, offers: int = 0) -> IntentAssessment:
         limitations = list(LIMITATIONS) + list(transcript.quality_notes)
+        if any(i.rule_id == "nli_payment_request" and i.context == "direct" and _low_confidence(transcript, i.segment_index) for i in found):
+            limitations.append(
+                "A payment finding rests on speech recognition that was low-confidence. A misheard word can reverse who is sending money to whom, so check the audio before relying on it."
+            )
         if skipped:
             limitations.append(f"The transcript is long, so only the first part was analyzed; {skipped} later sentence(s) were not.")
         direct = [i for i in found if i.context == "direct"]
         reported = len(found) - len(direct)
         common = dict(
             indicators=found,
+            suppressed_mentions=suppressed,
+            offer_mentions=offers,
             reported_mentions=reported,
             uncertain_mentions=uncertain,
             detector="nli",
@@ -431,7 +600,12 @@ class NliScamIntentAnalyzer:
         words = len(transcript.text.split())
         if words < MIN_WORDS_FOR_NEGATIVE:
             return IntentAssessment(risk="inconclusive", summary=f"The transcript is only {words} words long, which is too short to judge.", **common)  # type: ignore[arg-type]
-        return IntentAssessment(risk="none_detected", summary="No scam indicators were found in the transcript.", **common)  # type: ignore[arg-type]
+        summary = "No scam indicators were found in the transcript."
+        if offers:
+            summary += f" {offers} sentence(s) offered or asked about sending money from the speaker's side, which is not counted as a request for money."
+        if suppressed:
+            summary += f" {suppressed} possible match(es) were held back because the sentence reads as protective advice, such as a warning not to share a code."
+        return IntentAssessment(risk="none_detected", summary=summary, **common)  # type: ignore[arg-type]
 
     def analyze(self, transcript: TranscriptResult) -> IntentAssessment:
         method = self.method()

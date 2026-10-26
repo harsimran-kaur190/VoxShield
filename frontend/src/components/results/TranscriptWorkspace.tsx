@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 
 import { usePlayback, usePlaybackState, usePlaybackTime } from '../../hooks/usePlayback'
+import { hasUsableTiming } from '../../lib/evidence'
 import { buildPieces, CATEGORY_LABELS, formatTimestamp, indicatorKey } from '../../lib/highlight'
 import { activeSegmentIndex } from '../../lib/playback'
 import type { IntentIndicator, TranscriptResult } from '../../lib/types'
@@ -19,7 +20,8 @@ export function TranscriptWorkspace({ transcript, indicators, selected, onSelect
   const state = usePlaybackState()
   const byKey = new Map(indicators.map((item) => [indicatorKey(item), item]))
   const hasReported = indicators.some((item) => item.context === 'reported')
-  const canSeek = state.status === 'ready'
+  const hasTimes = transcript.segments.some(hasUsableTiming)
+  const canSeek = state.status === 'ready' && hasTimes
   // Re-renders only when the spoken segment changes, not on every playback frame.
   const active = usePlaybackTime((seconds) => activeSegmentIndex(transcript.segments, seconds))
   const list = useRef<HTMLDivElement>(null)
@@ -45,7 +47,11 @@ export function TranscriptWorkspace({ transcript, indicators, selected, onSelect
                 {' · '}
               </>
             )}
-            {canSeek ? 'Press a time to play from there.' : 'Playback is not available for this transcript.'}
+            {!hasTimes
+              ? 'This transcript has no timestamps, so it cannot be linked to the audio.'
+              : canSeek
+                ? 'Press a time to play from there. Times come from the speech-to-text segments.'
+                : 'Playback is not available for this transcript.'}
           </p>
         </div>
         {indicators.length > 0 && (
@@ -62,7 +68,12 @@ export function TranscriptWorkspace({ transcript, indicators, selected, onSelect
         )}
       </div>
 
-      {transcript.status === 'ok' ? (
+      {transcript.status === 'ok' && transcript.segments.length === 0 ? (
+        <div className="mt-5 rounded-2xl border border-line bg-card p-5">
+          <p className="text-sm text-ink-3">The transcript came back without segments, so nothing can be highlighted or linked to the audio. Plain text:</p>
+          <p className="mt-3 text-lg leading-8">{transcript.text || 'The transcript is empty.'}</p>
+        </div>
+      ) : transcript.status === 'ok' ? (
         <div ref={list} role="region" aria-label="Transcript text" tabIndex={0} className="relative mt-5 max-h-[32rem] overflow-y-auto rounded-2xl border border-line bg-card p-2 sm:p-4">
           <ol>
             {transcript.segments.map((segment) => {
@@ -75,12 +86,12 @@ export function TranscriptWorkspace({ transcript, indicators, selected, onSelect
                     else rows.current.delete(segment.index)
                   }}
                   aria-current={isActive ? 'true' : undefined}
-                  onClick={() => canSeek && controller?.seek(segment.start_seconds)}
+                  onClick={() => canSeek && hasUsableTiming(segment) && controller?.seek(segment.start_seconds)}
                   className={`grid grid-cols-[3.25rem_1fr] gap-3 rounded-lg border-l-2 px-2 py-3 transition-colors sm:grid-cols-[3.75rem_1fr] ${
                     isActive ? 'border-accent bg-accent-tint/60' : 'border-transparent'
-                  } ${canSeek ? 'cursor-pointer' : ''}`}
+                  } ${canSeek && hasUsableTiming(segment) ? 'cursor-pointer' : ''}`}
                 >
-                  {canSeek ? (
+                  {canSeek && hasUsableTiming(segment) ? (
                     <button
                       type="button"
                       onClick={(event) => {
@@ -89,12 +100,12 @@ export function TranscriptWorkspace({ transcript, indicators, selected, onSelect
                         void controller?.play()
                       }}
                       aria-label={`Play from ${formatTimestamp(segment.start_seconds)}`}
-                      className="h-7 self-start rounded-md px-1.5 text-left font-mono text-xs text-accent-deep underline-offset-4 hover:bg-accent-tint hover:underline"
+                      className="h-7 self-start rounded-md px-1.5 pointer-coarse:h-11 text-left font-mono text-xs text-accent-deep underline-offset-4 hover:bg-accent-tint hover:underline"
                     >
                       {formatTimestamp(segment.start_seconds)}
                     </button>
                   ) : (
-                    <span className="pt-1 font-mono text-xs text-ink-3">{formatTimestamp(segment.start_seconds)}</span>
+                    <span className="pt-1 font-mono text-xs text-ink-3">{hasUsableTiming(segment) ? formatTimestamp(segment.start_seconds) : '–:––'}</span>
                   )}
                   <p className="text-lg leading-8">
                     {buildPieces(segment, indicators).map((piece, index) => {

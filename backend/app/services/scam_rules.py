@@ -213,6 +213,7 @@ REPORTING = re.compile(
     r"(?:\w+\s+){0,2}?(?:said|says|saying|asked|asks|claimed|claims|told|tells|wrote|texted|demanded|threatened|insisted)"
     r"|(?:told|asked|texted|warned)\s+(?:me|us|him|her|them)"
     r"|(?:scammers?|fraudsters?|callers?|criminals?)\s+(?:\w+\s+){0,2}?(?:say|ask|tell|claim|pretend|use)"
+    r"|(?:offered|promised|agreed|volunteered)\s+to"
     r"|for\s+(?:example|instance)|such\s+as|like\s+when|quote|unquote)\b",
     I,
 )

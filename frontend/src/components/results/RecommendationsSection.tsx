@@ -1,5 +1,6 @@
 import { RotateCcw } from 'lucide-react'
 
+import { BASIS_LABEL, basisOf } from '../../lib/actions'
 import { formatTimestamp } from '../../lib/highlight'
 import { uniqueEvidence } from '../../lib/playback'
 import type { EvidenceRef, Priority, Recommendation, RecommendationPlan } from '../../lib/types'
@@ -25,8 +26,9 @@ function Evidence({ item, known, onSelectFinding, onShowVoice }: { item: Evidenc
   const text = item.source === 'voice' ? item.label : `“${item.label}”${item.start_seconds !== null ? ` · ${formatTimestamp(item.start_seconds)}` : ''}`
   const target = item.source === 'voice' ? onShowVoice : item.id && known.has(item.id) ? () => onSelectFinding(item.id as string) : null
   const base = 'max-w-full truncate rounded-full border border-stage-line px-3 py-1 text-left text-sm'
+  const tappable = 'pointer-coarse:py-3'
   return target ? (
-    <button type="button" onClick={target} className={`${base} text-paper/90 hover:border-accent-light hover:text-white`}>
+    <button type="button" onClick={target} className={`${base} ${tappable} text-paper/90 hover:border-accent-light hover:text-white`}>
       {text}
     </button>
   ) : (
@@ -48,6 +50,15 @@ function Chips({ rec, ...handlers }: { rec: Recommendation } & Handlers) {
   )
 }
 
+function Why({ rec, showWhy = true }: { rec: Recommendation; showWhy?: boolean }) {
+  return (
+    <div className="mt-2 max-w-3xl text-sm text-paper/70">
+      {showWhy && rec.why && <p>Why: {rec.why}</p>}
+      <p className="mt-0.5 font-mono text-xs">{BASIS_LABEL[basisOf(rec)]}</p>
+    </div>
+  )
+}
+
 function PriorityLabel({ priority }: { priority: Priority }) {
   const view = PRIORITY[priority]
   return (
@@ -66,6 +77,7 @@ function Compact({ rec, ...handlers }: { rec: Recommendation } & Handlers) {
         <PriorityLabel priority={rec.priority} />
       </div>
       <p className="mt-1 max-w-3xl text-sm text-paper/80">{rec.detail}</p>
+      <Why rec={rec} />
       <Chips rec={rec} {...handlers} />
     </li>
   )
@@ -80,6 +92,13 @@ export function RecommendationsSection({ plan, knownFindings, onSelectFinding, o
         </h2>
         <p className="mt-4 max-w-2xl text-lg">{plan.headline}</p>
         {plan.detail && <p className="mt-2 max-w-2xl text-ink-2">{plan.detail}</p>}
+        {(plan.general ?? []).map((rec) => (
+          <div key={rec.id} className="mt-5 max-w-2xl border-l-2 border-line-strong pl-4">
+            <h3 className="font-medium">{rec.title}</h3>
+            <p className="mt-1 text-ink-2">{rec.detail}</p>
+            <p className="mt-1 text-sm text-ink-3">{BASIS_LABEL[basisOf(rec)]}.</p>
+          </div>
+        ))}
         {plan.state === 'insufficient' && onRetry && (
           <button type="button" onClick={onRetry} className="mt-5 inline-flex items-center gap-2 rounded-full border border-line-strong px-4 py-2 text-sm hover:bg-paper-2">
             <RotateCcw className="size-4" aria-hidden />
@@ -108,6 +127,7 @@ export function RecommendationsSection({ plan, knownFindings, onSelectFinding, o
           <PriorityLabel priority={first.priority} />
         </div>
         <p className="mt-3 max-w-2xl text-lg text-paper/90">{first.detail}</p>
+        <Why rec={first} showWhy={false} />
         <Chips rec={first} {...handlers} />
       </div>
 
@@ -121,9 +141,16 @@ export function RecommendationsSection({ plan, knownFindings, onSelectFinding, o
           </ul>
         </div>
       )}
+      {(plan.general ?? []).map((rec) => (
+        <div key={rec.id} className="mt-6 max-w-3xl border-t border-stage-line pt-5">
+          <h3 className="font-medium">{rec.title}</h3>
+          <p className="mt-1 text-sm text-paper/80">{rec.detail}</p>
+          <p className="mt-1 font-mono text-xs text-paper/70">{BASIS_LABEL[basisOf(rec)]}</p>
+        </div>
+      ))}
       {more.length > 0 && (
         <details className="mt-6 border-t border-stage-line pt-5">
-          <summary className="cursor-pointer text-paper/90 underline-offset-4 hover:underline">Also worth doing ({more.length})</summary>
+          <summary className="flex cursor-pointer items-center text-paper/90 underline-offset-4 hover:underline pointer-coarse:min-h-11">Also worth doing ({more.length})</summary>
           <ul className="mt-5 divide-y divide-stage-line">
             {more.map((rec) => (
               <Compact key={rec.id} rec={rec} {...handlers} />

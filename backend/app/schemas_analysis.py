@@ -99,6 +99,7 @@ class IntentAssessment(BaseModel):
     indicators: list[IntentIndicator] = []
     categories: list[str] = []
     suppressed_mentions: int = 0
+    offer_mentions: int = 0  # sentences where the speaker offered or asked about sending money; not counted as requests
     reported_mentions: int = 0
     uncertain_mentions: int = 0
     detector: Literal["rules", "nli"] = "rules"
@@ -127,6 +128,11 @@ class Recommendation(BaseModel):
     priority: Priority
     evidence: list[EvidenceRef] = []
     secondary: bool = False
+    # One short sentence on why this matters, written in advance for the action (never generated from the transcript).
+    why: str | None = None
+    # "finding": follows from a scam-intent finding in this recording. "voice": follows from the voice model's lean and
+    # says nothing about scams. "general": an ordinary precaution that does not depend on the analysis result.
+    basis: Literal["finding", "voice", "general"] = "finding"
 
 
 class RecommendationPlan(BaseModel):
@@ -134,6 +140,8 @@ class RecommendationPlan(BaseModel):
     headline: str
     detail: str | None = None
     items: list[Recommendation] = []
+    # General precautions shown when the analysis found no direct request but the user may still want a next step.
+    general: list[Recommendation] = []
 
 
 class Privacy(BaseModel):

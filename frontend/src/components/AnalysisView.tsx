@@ -75,7 +75,7 @@ export function AnalysisView({ fileName, fileSize, waveform, progress, startedAt
         <p className="max-w-xl text-sm text-ink-3" aria-live="polite">
           {elapsed >= SLOW_AFTER_SECONDS
             ? 'Still working. The first analysis after the server starts also loads the models, and long recordings take longer.'
-            : 'Audio is held in a temporary file on the server and deleted when this finishes.'}{' '}
+            : 'Audio is held in temporary files on the server and deleted when this finishes.'}{' '}
           <span className="font-mono">{elapsed}s</span>
         </p>
         <button

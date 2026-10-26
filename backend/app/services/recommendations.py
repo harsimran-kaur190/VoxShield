@@ -14,6 +14,7 @@ from app.schemas_analysis import (
     Priority,
     Recommendation,
     RecommendationPlan,
+    TranscriptResult,
     VoiceAssessment,
 )
 
@@ -34,6 +35,7 @@ class Action:
     priority: Priority
     phrase: str  # how the trigger reads inside the headline
     matches: Callable[[IntentIndicator], bool]
+    why: str = ""
 
 
 ACTIONS: tuple[Action, ...] = (
@@ -44,6 +46,7 @@ ACTIONS: tuple[Action, ...] = (
         "high",
         "a request for a code, PIN or password",
         lambda i: i.category == "credential_request",
+        why='Organizations do not ask callers to read out codes or passwords, and anyone holding one can take over an account.',
     ),
     Action(
         "payment",
@@ -52,6 +55,7 @@ ACTIONS: tuple[Action, ...] = (
         "high",
         "a payment request",
         lambda i: i.category == "payment_pressure",
+        why='Money sent on request is hard to recover, and a payment request is the moment to confirm who is really asking.',
     ),
     Action(
         "family",
@@ -60,6 +64,7 @@ ACTIONS: tuple[Action, ...] = (
         "high",
         "a caller claiming to be a relative or in an emergency",
         lambda i: i.rule_id in FAMILY_RULES,
+        why='Voice cloning can imitate a relative, so the voice alone cannot confirm who is calling.',
     ),
     Action(
         "remote_access",
@@ -68,6 +73,7 @@ ACTIONS: tuple[Action, ...] = (
         "high",
         "a request for remote access to your device",
         lambda i: i.category == "remote_access",
+        why='Remote access lets someone see and control the device, including banking apps and passwords.',
     ),
     Action(
         "organization",
@@ -76,6 +82,7 @@ ACTIONS: tuple[Action, ...] = (
         "medium",
         "a claimed bank, agency, or official role",
         lambda i: i.category == "impersonation" and i.rule_id not in FAMILY_RULES,
+        why="A caller's claim to be from a bank or agency cannot be confirmed from audio, and real organizations also call customers.",
     ),
     Action(
         "pressure",
@@ -84,14 +91,25 @@ ACTIONS: tuple[Action, ...] = (
         "medium",
         "pressure or threats",
         lambda i: i.category in {"coercion_threat", "urgency"},
+        why='Urgency and threats leave less time to check, whether or not the request is genuine.',
+    ),
+    Action(
+        "verify",
+        "Check through a channel you already trust",
+        "Contact the organization or person using a number or app you already had, such as the one on your card or statement. Do not use a number, link or app the caller supplied.",
+        "high",
+        "being discouraged from checking",
+        lambda i: i.category == "verification_bypass",
+        why="Being told not to check is the opposite of what a genuine request needs; a real one can wait while you confirm it.",
     ),
     Action(
         "secrecy",
         "Treat secrecy as a reason to pause",
-        "Being asked to hide something, or to skip the usual checks, is a reason to get independent confirmation, ideally from someone you trust.",
+        "Being asked to hide something is a reason to get independent confirmation, ideally from someone you trust.",
         "medium",
-        "a request for secrecy or to skip verification",
-        lambda i: i.category in {"secrecy_isolation", "verification_bypass"},
+        "a request for secrecy",
+        lambda i: i.category == "secrecy_isolation",
+        why="Keeping others out of the loop removes the chance for someone to spot a problem.",
     ),
 )
 
@@ -125,6 +143,8 @@ def _voice_recommendation(voice: VoiceAssessment) -> tuple[Recommendation, str] 
             detail=f"The voice model leaned “fake” in {counted}. That is a model assessment, not proof. Verify the speaker through a separate trusted channel.",
             priority="medium",
             evidence=[EvidenceRef(source="voice", label=label)],
+            why="Voice models can be wrong, for example on phone-quality or noisy audio, and can flag harmless synthetic voices such as text-to-speech or assistants.",
+            basis="voice",
         ),
         "a voice the model flagged as possibly synthetic",
     )
@@ -136,7 +156,30 @@ def _join(phrases: list[str]) -> str:
     return ", ".join(phrases[:-1]) + f" and {phrases[-1]}"
 
 
-def build_recommendations(voice: VoiceAssessment, intent: IntentAssessment) -> RecommendationPlan:
+GENERAL_VERIFY = Recommendation(
+    id="general_verify",
+    title="If a message about your account worries you, check it yourself",
+    detail="Open your bank's app or call the number on your card or statement. Avoid links or phone numbers that arrived in the message or call.",
+    priority="low",
+    why="This is an ordinary precaution that applies to any account message. It is not a result of this analysis.",
+    basis="general",
+)
+VOICE_ONLY_HEADLINE = (
+    "The voice model leaned “fake”, but no direct scam request was found in the conversation. "
+    "Treat that as a reason to confirm who is speaking, not as a sign of a scam."
+)
+
+
+def _general(transcript: TranscriptResult | None, intent: IntentAssessment) -> list[Recommendation]:
+    """Ordinary precautions for a quiet or ambiguous result. Only when there was a transcript to look at."""
+    if transcript is None or transcript.status != "ok" or intent.error:
+        return []
+    if intent.risk in {"none_detected", "inconclusive", "weak_signals"}:
+        return [GENERAL_VERIFY]
+    return []
+
+
+def build_recommendations(voice: VoiceAssessment, intent: IntentAssessment, transcript: TranscriptResult | None = None) -> RecommendationPlan:
     direct = [i for i in intent.indicators if i.context == "direct"]
     ranked: list[tuple[Recommendation, str]] = []
     for action in ACTIONS:
@@ -150,6 +193,7 @@ def build_recommendations(voice: VoiceAssessment, intent: IntentAssessment) -> R
                         detail=action.detail,
                         priority=_priority(action.priority, matched),
                         evidence=[_evidence(i) for i in matched],
+                        why=action.why or None,
                     ),
                     action.phrase,
                 )
@@ -159,10 +203,14 @@ def build_recommendations(voice: VoiceAssessment, intent: IntentAssessment) -> R
         ranked.append(voice_item)
 
     if ranked:
-        # Stable sort: higher priority first, then more evidence, then the order the actions are declared in.
-        ranked.sort(key=lambda pair: (-PRIORITY_RANK[pair[0].priority], -len(pair[0].evidence)))
+        # What comes first: advice that follows from a scam finding always precedes the voice item, which says nothing
+        # about scams. Then higher priority, then more supporting findings, then the order ACTIONS is declared in
+        # (a stable sort), which puts codes ahead of payments ahead of the rest.
+        ranked.sort(key=lambda pair: (pair[0].basis == "voice", -PRIORITY_RANK[pair[0].priority], -len(pair[0].evidence)))
         items = [rec.model_copy(update={"secondary": index >= MAX_PRIMARY}) for index, (rec, _) in enumerate(ranked)]
         count = sum(len(rec.evidence) for rec in items)
+        if all(rec.basis == "voice" for rec in items):
+            return RecommendationPlan(state="actions", headline=VOICE_ONLY_HEADLINE, items=items, general=_general(transcript, intent))
         headline = f"Based on {count} finding{'s' if count != 1 else ''}: {_join([phrase for _, phrase in ranked])}."
         return RecommendationPlan(state="actions", headline=headline, items=items)
 
@@ -171,16 +219,19 @@ def build_recommendations(voice: VoiceAssessment, intent: IntentAssessment) -> R
             state="reported_only",
             headline="The transcript quotes or recounts scam-like phrases, but no direct request was detected.",
             detail=NOT_GUARANTEE,
+            general=_general(transcript, intent),
         )
     if intent.risk == "none_detected":
         return RecommendationPlan(
             state="none_detected",
             headline="No suspicious indicators were detected in the analyzed transcript.",
             detail=NOT_GUARANTEE,
+            general=_general(transcript, intent),
         )
     reason = intent.error or intent.summary or voice.error
     return RecommendationPlan(
         state="insufficient",
         headline="There isn't enough reliable evidence to recommend a result-specific action.",
         detail=reason or None,
+        general=_general(transcript, intent),
     )

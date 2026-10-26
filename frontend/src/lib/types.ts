@@ -26,6 +26,8 @@ export interface TranscriptSegment {
   text: string
   char_start: number
   char_end: number
+  avg_logprob?: number | null
+  no_speech_prob?: number | null
 }
 
 export interface TranscriptResult {
@@ -91,6 +93,8 @@ export interface IntentAssessment {
   indicators: IntentIndicator[]
   categories: string[]
   suppressed_mentions: number
+  /** Sentences where the speaker offered, or asked about, sending money. Not counted as requests. Absent in older reports. */
+  offer_mentions?: number
   reported_mentions: number
   uncertain_mentions: number
   detector: 'rules' | 'nli'
@@ -116,13 +120,21 @@ export interface Recommendation {
   priority: Priority
   evidence: EvidenceRef[]
   secondary: boolean
+  /** One short sentence on why this matters. Absent in reports from older servers. */
+  why?: string | null
+  /** What the advice follows from. Absent means a finding, as before. */
+  basis?: RecommendationBasis
 }
+
+export type RecommendationBasis = 'finding' | 'voice' | 'general'
 
 export interface RecommendationPlan {
   state: 'actions' | 'none_detected' | 'reported_only' | 'insufficient'
   headline: string
   detail: string | null
   items: Recommendation[]
+  /** Ordinary precautions offered when no direct request was found. */
+  general?: Recommendation[]
 }
 
 export interface AnalysisReport {

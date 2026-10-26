@@ -22,6 +22,7 @@ RUN python scripts/download_models.py && chown -R voxshield:voxshield /opt/hf-ca
 
 # Runtime defaults for a public server. Override any of them with environment variables.
 ENV HF_HUB_OFFLINE=1 \
+    HF_HUB_DISABLE_TELEMETRY=1 \
     VOXSHIELD_PRELOAD_MODELS=true \
     VOXSHIELD_DOCS_ENABLED=false \
     PORT=8000 \

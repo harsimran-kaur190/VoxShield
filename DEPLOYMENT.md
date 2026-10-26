@@ -71,23 +71,47 @@ Set as environment variables (prefix `VOXSHIELD_`). Defaults are in `backend/app
 
 **Rate limiting and proxies.** The limit is per client address. Behind a proxy every visitor looks like the proxy unless
 `FORWARDED_ALLOW_IPS` lists it, in which case the real address from `X-Forwarded-For` is used. Never set it to `*` on an
-API that is reachable directly from the internet, because anyone could then forge the header and dodge the limit
-(Compose sets `*` only because the API is reachable solely through the web container). The limiter keeps its counts in
-memory, so it is per replica and resets on restart.
+API that is reachable directly from the internet, because anyone could then forge the header and dodge the limit.
+Compose sets `*` because the API is reachable only through the web container, **and** the bundled `nginx.conf` overwrites
+`X-Forwarded-For` with the real client address instead of appending to what the client sent. (Until Stage 6 it appended,
+and a client could pick its own address: 30 requests with forged headers all got through a limit of 20. A test now
+guards the nginx setting.) If another proxy or load balancer sits in front of the web container, configure nginx's `realip`
+module rather than trusting the header blindly. The limiter keeps its counts in memory, so it is per replica and resets on restart.
 
 ## Privacy and security notes
 
-* **Audio and transcripts are not stored.** Uploads go to a temporary folder and are deleted when the analysis ends,
-  including on errors; folders left by a crash are removed at the next start-up. In Compose, `/tmp` is a memory-backed
-  filesystem, so audio never touches disk. Playback on the results page uses the copy already in the visitor's browser.
+* **Audio and transcripts are not kept.** Uploads go to temporary files (the framework's own spool file for uploads over
+  1 MB, plus a `voxshield-*` folder) and are deleted when the analysis ends, including on errors and when the client
+  disconnects; folders left by a crash are removed at the next start-up. Deletion is not a secure erase. In Compose, `/tmp`
+  is a memory-backed filesystem, which keeps audio off the container's filesystem; it cannot promise the host never swaps
+  that memory to disk. Playback on the results page uses the copy already in the visitor's browser.
 * **No cache.** Every API response carries `Cache-Control: no-store`, since a response can contain a transcript.
 * **No third parties.** Fonts are bundled; the site makes no requests to other hosts. The API contacts no one at runtime
   once the models are baked into the image.
-* **Logs.** Application logs contain only error class names, never audio, transcripts, or file names. The web server's
+* **Logs.** Application logs contain only error class names (unexpected errors included), never audio, transcripts, or file names. The web server's
   access log records the visitor's IP address and the request path, so apply your host's log-retention policy.
 * **No accounts, no authentication.** Anyone who can reach the API can submit audio. Rate limiting and the concurrency cap
   stop casual abuse, not a determined one. For anything beyond a demo, put the API behind your platform's access controls.
 * **The container runs as a non-root user.**
+* **Upload size is enforced as the body arrives.** The limit applies to the bytes actually received, so a chunked upload
+  with no `Content-Length` is cut off at the limit instead of being spooled to disk first.
+
+### Known gaps (not fixed, by design or for lack of a requirement)
+
+* **No analysis time limit.** A maximum-length recording (10 minutes by default) costs about four minutes of CPU, and
+  speech-to-text runs one request at a time. Four such uploads fill every slot, and others get `503 busy`. For a public
+  demo, lower `VOXSHIELD_MAX_DURATION_SECONDS` (for example to 120) and keep the rate limit on.
+* **Slow uploads** hold a connection and a spool file until the proxy gives up. The bundled nginx has a 60 s timeout
+  between body reads (nginx's documented default, not tested here); a deployment without a proxy has no such limit.
+* **Busy responses come late.** The `503 busy` answer is sent after the upload has been received, not before.
+* **Abandoned analyses finish their current stage.** When a client disconnects, its temporary files are removed at once and
+  the work stops after the stage in progress, but the concurrency slot is released immediately, so a few abandoned jobs can
+  briefly run beyond the cap.
+* **WAV files with streaming headers** (sizes of `0xFFFFFFFF`) are refused as "too long". Recordings made in the browser
+  are not affected.
+* `/docs` is on by default outside Docker, the `Server: uvicorn` header is sent, and there is no authentication.
+* This is a review of one codebase by its authors with hand-run experiments and tests. It is not an independent
+  penetration test.
 * The models are pinned to exact revisions (`backend/app/config.py`), so a rebuild fetches the same weights.
 
 ## Verify a deployment

@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { AboutPage } from './pages/AboutPage'
 import { DashboardPage } from './pages/DashboardPage'
+import { LabPage } from './pages/LabPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 
 export default function App() {
@@ -10,6 +11,7 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<DashboardPage />} />
+        <Route path="lab" element={<LabPage />} />
         <Route path="about" element={<AboutPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

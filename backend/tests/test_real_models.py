@@ -49,3 +49,30 @@ def test_synthetic_scam_script_is_transcribed_and_flagged_end_to_end(tmp_path):
     assert {"credential_request"} <= set(report["intent"]["categories"])
     assert all(i["start_seconds"] is not None for i in report["intent"]["indicators"])
     assert report["voice"]["verdict"] in {"model_favors_fake", "model_favors_real", "inconclusive"}
+
+
+def _analyze_spoken(tmp_path, text):
+    wav = _say(tmp_path, text)
+    with TestClient(app) as client:
+        response = client.post("/api/v1/analysis", files={"file": ("spoken.wav", wav, "audio/wav")})
+    report = response.json()
+    assert response.status_code == 200 and report["transcript"]["status"] == "ok", report.get("errors")
+    return report
+
+
+def _payment(report):
+    return [i for i in report["intent"]["indicators"] if i["category"] == "payment_pressure" and i["context"] == "direct"]
+
+
+def test_spoken_offer_to_send_money_is_transcribed_with_its_direction_and_not_flagged_as_a_request(tmp_path):
+    """Speech goes through the real transcriber and the real classifier. The direction is checked in the transcript
+    first, because the finding logic can only be as right as the words it is given."""
+    report = _analyze_spoken(tmp_path, "Hello, thanks for waiting. Can I send you some money for now? Let me know what works for you.")
+    assert "Can I send you some money" in report["transcript"]["text"]
+    assert _payment(report) == []
+
+
+def test_spoken_request_for_money_is_still_flagged(tmp_path):
+    report = _analyze_spoken(tmp_path, "Hello, thanks for waiting. Could you send me some money for now? It is for my rent.")
+    assert "Could you send me some money" in report["transcript"]["text"]
+    assert _payment(report)

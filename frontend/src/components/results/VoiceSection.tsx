@@ -1,36 +1,35 @@
 import { usePlayback, usePlaybackState } from '../../hooks/usePlayback'
 import { formatTimestamp } from '../../lib/highlight'
 import { ModelNote, Limitations } from '../ModelNote'
-import type { VoiceAssessment, VoiceVerdict } from '../../lib/types'
-
-const VIEW: Record<VoiceVerdict, { label: string; dot: string }> = {
-  model_favors_fake: { label: 'Model favors “fake”', dot: 'bg-amber-light' },
-  model_favors_real: { label: 'Model favors “real”', dot: 'bg-accent' },
-  inconclusive: { label: 'Inconclusive', dot: 'bg-line-strong' },
-  unavailable: { label: 'Unavailable', dot: 'bg-danger' },
-}
+import { VOICE_VIEW } from '../../lib/views'
+import type { VoiceAssessment } from '../../lib/types'
 
 export function VoiceSection({ voice }: { voice: VoiceAssessment }) {
   const controller = usePlayback()
   const playback = usePlaybackState()
-  const view = VIEW[voice.verdict]
+  const view = VOICE_VIEW[voice.verdict]
   const scored = voice.windows.length > 0 && voice.fake_score_median !== null
   return (
     <section aria-labelledby="voice-heading">
-      <p className="font-mono text-sm text-accent">01 · Voice authenticity</p>
+      <p className="font-mono text-sm text-accent">02 · Voice authenticity</p>
       <h2 id="voice-heading" className="mt-2 flex items-center gap-3 font-display text-3xl font-medium sm:text-4xl">
         <span className={`size-3 shrink-0 rounded-full ${view.dot}`} aria-hidden />
         {view.label}
       </h2>
       <p className="mt-3 text-ink-2">{voice.summary}</p>
       {voice.error && <p className="mt-2 text-danger">{voice.error}</p>}
+      {voice.verdict !== 'unavailable' && (
+        <p className="mt-3 text-sm text-ink-3">
+          Source: voice-authenticity analysis of the audio signal only. The classifier returns a score and does not say which sounds or features led to it, so this page cannot explain why. It detected a voice-related signal, nothing more specific.
+        </p>
+      )}
 
       {scored && voice.fake_score_median !== null && (
         <div className="mt-8">
           <div className="flex items-end gap-4">
-            <p className="font-display text-7xl font-medium leading-none tabular-nums">{voice.fake_score_median.toFixed(2)}</p>
+            <p className="font-display text-5xl font-medium leading-none tabular-nums">{voice.fake_score_median.toFixed(2)}</p>
             <p className="pb-1 text-sm text-ink-2">
-              median “fake” score
+              median “fake” label score, not a probability
               <br />
               across {voice.windows_analyzed} window{voice.windows_analyzed === 1 ? '' : 's'}
             </p>
@@ -79,7 +78,7 @@ export function VoiceSection({ voice }: { voice: VoiceAssessment }) {
               return (
                 <li key={window.start_seconds}>
                   {playback.status === 'ready' ? (
-                    <button type="button" onClick={() => controller?.seek(window.start_seconds)} aria-label={`${label}. Jump to this window.`} className="flex w-full items-center gap-3 rounded-md px-1 py-1 hover:bg-paper-2">
+                    <button type="button" onClick={() => controller?.seek(window.start_seconds)} aria-label={`${label}. Jump to this window.`} className="flex w-full items-center gap-3 rounded-md px-1 py-1 hover:bg-paper-2 pointer-coarse:min-h-11">
                       {row}
                     </button>
                   ) : (
@@ -113,7 +112,7 @@ export function VoiceSection({ voice }: { voice: VoiceAssessment }) {
 
       {voice.verdict !== 'unavailable' && (
         <details className="mt-4 text-sm">
-          <summary className="cursor-pointer text-accent underline-offset-4 hover:underline">How this score is produced</summary>
+          <summary className="flex cursor-pointer items-center text-accent underline-offset-4 hover:underline pointer-coarse:min-h-11">How this score is produced</summary>
           {voice.score_note && <p className="mt-2 text-ink-2">{voice.score_note}</p>}
           {voice.decision_rule && <p className="mt-2 text-ink-2">{voice.decision_rule}</p>}
           <ModelNote model={voice.model} />

@@ -59,6 +59,11 @@ class Settings(BaseSettings):
     scam_nli_threshold: float = 0.92
     scam_nli_uncertain_threshold: float = 0.30
     scam_nli_reported_threshold: float = 0.50
+    # Added after the Stage 2 false-positive report. See evaluation/RESULTS.md.
+    scam_nli_protective_threshold: float = 0.90
+    scam_nli_reported_finding_threshold: float = 0.80
+    scam_nli_protective_strict_threshold: float = 0.95
+    scam_nli_sender_threshold: float = 0.85
 
     @property
     def effective_scam_revision(self) -> str | None:

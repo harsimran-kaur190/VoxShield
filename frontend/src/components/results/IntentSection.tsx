@@ -1,19 +1,12 @@
 import { ArrowDownToLine, Play } from 'lucide-react'
 
 import { usePlayback, usePlaybackState } from '../../hooks/usePlayback'
+import { findingCaveats, findingSource } from '../../lib/evidence'
 import { CATEGORY_LABELS, formatTimestamp, segmentOf } from '../../lib/highlight'
 import { findingSeekTime, type FindingGroup } from '../../lib/playback'
-import type { IntentAssessment, IntentRisk, TranscriptResult } from '../../lib/types'
+import { INTENT_VIEW } from '../../lib/views'
+import type { IntentAssessment, TranscriptResult } from '../../lib/types'
 import { Limitations, ModelNote } from '../ModelNote'
-
-const VIEW: Record<IntentRisk, { label: string; dot: string }> = {
-  high: { label: 'Strong indicators', dot: 'bg-danger' },
-  elevated: { label: 'Notable indicators', dot: 'bg-amber-light' },
-  weak_signals: { label: 'Weak signals only', dot: 'bg-accent' },
-  none_detected: { label: 'No indicators found', dot: 'bg-line-strong' },
-  inconclusive: { label: 'Inconclusive', dot: 'bg-line-strong' },
-  unavailable: { label: 'Unavailable', dot: 'bg-danger' },
-}
 
 const SEVERITY = {
   high: { label: 'High signal', dot: 'bg-danger' },
@@ -58,7 +51,7 @@ function Entry({ group, transcript, active, onSelect, onShowInTranscript }: { gr
               }}
               aria-label={`Play from ${formatTimestamp(seekTime)}`}
               title="Play the recording from the start of this segment"
-              className="inline-flex items-center gap-1.5 rounded-md bg-ink px-2 py-0.5 font-mono text-xs text-paper hover:bg-accent"
+              className="inline-flex items-center gap-1.5 rounded-md bg-ink px-2 py-0.5 font-mono text-xs text-paper hover:bg-accent pointer-coarse:min-h-11 pointer-coarse:px-3"
             >
               <Play className="size-3 fill-current" aria-hidden />
               {formatTimestamp(seekTime)}
@@ -102,9 +95,21 @@ function Entry({ group, transcript, active, onSelect, onShowInTranscript }: { gr
         ))}
       </ul>
 
+      <div className="mt-3 space-y-1 text-sm text-ink-3">
+        <p>
+          <span className="font-medium text-ink-2">Source: </span>
+          {findingSource(group.items[0])}
+        </p>
+        <ul className="list-disc pl-5" aria-label="Limits of this finding">
+          {[...new Set(group.items.flatMap((item) => findingCaveats(item, segmentOf(item, transcript.segments))))].map((note) => (
+            <li key={note}>{note}</li>
+          ))}
+        </ul>
+      </div>
+
       <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
         {located ? (
-          <button type="button" onClick={() => onShowInTranscript(group.key)} className="inline-flex items-center gap-1.5 text-accent underline-offset-4 hover:underline">
+          <button type="button" onClick={() => onShowInTranscript(group.key)} className="inline-flex items-center gap-1.5 text-accent underline-offset-4 hover:underline pointer-coarse:min-h-11">
             <ArrowDownToLine className="size-4" aria-hidden />
             Show in transcript
           </button>
@@ -112,7 +117,7 @@ function Entry({ group, transcript, active, onSelect, onShowInTranscript }: { gr
           <span className="text-ink-3">Not located in the transcript</span>
         )}
         <details>
-          <summary className="cursor-pointer text-ink-3 underline-offset-4 hover:underline">How this was found</summary>
+          <summary className="flex cursor-pointer items-center text-ink-3 underline-offset-4 hover:underline pointer-coarse:min-h-11">How this was found</summary>
           {group.items.map((item) => (
             <p key={item.id} className="mt-2 text-ink-2">
               {item.trigger}
@@ -125,16 +130,19 @@ function Entry({ group, transcript, active, onSelect, onShowInTranscript }: { gr
 }
 
 export function IntentSection({ intent, transcript, groups, selected, onSelect, onShowInTranscript }: Props) {
-  const view = VIEW[intent.risk]
+  const view = INTENT_VIEW[intent.risk]
   return (
     <section aria-labelledby="intent-heading">
-      <p className="font-mono text-sm text-amber">02 · Scam intent</p>
+      <p className="font-mono text-sm text-amber">01 · Scam intent</p>
       <h2 id="intent-heading" className="mt-2 flex items-center gap-3 font-display text-3xl font-medium sm:text-4xl">
         <span className={`size-3 shrink-0 rounded-full ${view.dot}`} aria-hidden />
         {view.label}
       </h2>
       <p className="mt-3 text-ink-2">{intent.summary}</p>
       {intent.error && <p className="mt-2 text-danger">{intent.error}</p>}
+      {intent.risk === 'inconclusive' && (
+        <p className="mt-2 text-sm text-ink-3">The detector could not settle on a result. Treat this as no answer, and neither as a warning nor as reassurance.</p>
+      )}
       {groups.length > 0 && (
         <p className="mt-2 text-sm text-ink-3">Indicators are clues found in the conversation, listed strongest first. They don’t confirm fraudulent intent.</p>
       )}
@@ -155,14 +163,14 @@ export function IntentSection({ intent, transcript, groups, selected, onSelect, 
       ) : (
         intent.risk === 'none_detected' && (
           <p className="mt-6 border-l-2 border-line-strong pl-4 text-ink-2">
-            Nothing in the transcript matched the scam check. It covers common English phrases, so this is not a clearance.
+            No suspicious indicators were identified by the available analysis. It checks only the transcript, for common English scam wording, so a quiet result is not a clearance.
           </p>
         )
       )}
 
       {intent.method && (
         <details className="mt-4 text-sm">
-          <summary className="cursor-pointer text-accent underline-offset-4 hover:underline">How indicators are found</summary>
+          <summary className="flex cursor-pointer items-center text-accent underline-offset-4 hover:underline pointer-coarse:min-h-11">How indicators are found</summary>
           {intent.score_note && <p className="mt-2 text-ink-2">{intent.score_note}</p>}
           <ModelNote model={intent.method} />
           <Limitations items={intent.limitations} />

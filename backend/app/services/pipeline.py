@@ -100,7 +100,7 @@ class AnalysisPipeline:
             transcript=transcript,
             voice=voice,
             intent=intent,
-            recommendations=build_recommendations(voice, intent),
+            recommendations=build_recommendations(voice, intent, transcript),
             errors=errors,
             timings_seconds=timings,
         )

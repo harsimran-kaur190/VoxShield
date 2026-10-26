@@ -4,6 +4,7 @@ import { Logo } from './Logo'
 
 const links: { to: string; label: string; short?: string }[] = [
   { to: '/', label: 'Analyze' },
+  { to: '/lab', label: 'Scenario Lab', short: 'Lab' },
   { to: '/about', label: 'Evaluation & limits', short: 'Limits' },
 ]
 

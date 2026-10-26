@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { activeSegmentIndex, findingSeekTime, groupFindings, summaryLine } from './playback'
-import type { AnalysisReport, IntentIndicator, TranscriptSegment } from './types'
+import { activeSegmentIndex, findingSeekTime, groupFindings } from './playback'
+import type { IntentIndicator, TranscriptSegment } from './types'
 
 const segment = (index: number, start: number, end: number): TranscriptSegment => ({
   index, start_seconds: start, end_seconds: end, text: `s${index}`, char_start: index * 10, char_end: index * 10 + 5,
@@ -70,21 +70,5 @@ describe('groupFindings', () => {
 
   it('handles no findings', () => {
     expect(groupFindings([])).toEqual([])
-  })
-})
-
-describe('summaryLine', () => {
-  const report = (risk: string, verdict: string) => ({ intent: { risk }, voice: { verdict } }) as unknown as AnalysisReport
-  it('reports the two assessments separately and never as one score or a verdict of fraud', () => {
-    const line = summaryLine(report('high', 'model_favors_real'))
-    expect(line).toBe('Strong scam indicators were found in the conversation, and the voice model favors “real”. These are two separate assessments.')
-    expect(line).not.toMatch(/\d|fraud|scammer|proven|%/i)
-  })
-  it.each([
-    ['none_detected', 'inconclusive', 'No scam indicators were found in the transcript, and the voice check was inconclusive.'],
-    ['unavailable', 'unavailable', 'The conversation check is unavailable, and the voice check is unavailable.'],
-    ['weak_signals', 'model_favors_fake', 'Only weak signals were found in the conversation, and the voice model favors “fake”.'],
-  ])('covers %s / %s', (risk, verdict, expected) => {
-    expect(summaryLine(report(risk, verdict))).toContain(expected)
   })
 })

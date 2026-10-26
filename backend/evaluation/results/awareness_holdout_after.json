@@ -1,0 +1,228 @@
+{
+ "detector": "nli",
+ "false_positives": [],
+ "false_negatives": [],
+ "rows": [
+  {
+   "id": "h1",
+   "kind": "benign",
+   "risk": "none_detected",
+   "direct": [],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "h2",
+   "kind": "benign",
+   "risk": "none_detected",
+   "direct": [],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "h3",
+   "kind": "benign",
+   "risk": "inconclusive",
+   "direct": [],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "h4",
+   "kind": "benign",
+   "risk": "none_detected",
+   "direct": [],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "h5",
+   "kind": "benign",
+   "risk": "none_detected",
+   "direct": [],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "h6",
+   "kind": "benign",
+   "risk": "none_detected",
+   "direct": [],
+   "strong": [],
+   "suppressed": 1,
+   "error": false
+  },
+  {
+   "id": "h7",
+   "kind": "ambiguous",
+   "risk": "none_detected",
+   "direct": [],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "h8",
+   "kind": "ambiguous",
+   "risk": "none_detected",
+   "direct": [],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "h9",
+   "kind": "quoted",
+   "risk": "none_detected",
+   "direct": [],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "h10",
+   "kind": "quoted",
+   "risk": "weak_signals",
+   "direct": [
+    "urgency"
+   ],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "h11",
+   "kind": "quoted",
+   "risk": "inconclusive",
+   "direct": [],
+   "strong": [],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "h12",
+   "kind": "suspicious",
+   "risk": "elevated",
+   "direct": [
+    "credential_request"
+   ],
+   "strong": [
+    "credential_request"
+   ],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "h13",
+   "kind": "suspicious",
+   "risk": "elevated",
+   "direct": [
+    "secrecy_isolation"
+   ],
+   "strong": [
+    "secrecy_isolation"
+   ],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "h14",
+   "kind": "suspicious",
+   "risk": "elevated",
+   "direct": [
+    "verification_bypass"
+   ],
+   "strong": [
+    "verification_bypass"
+   ],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "h15",
+   "kind": "suspicious",
+   "risk": "elevated",
+   "direct": [
+    "payment_pressure"
+   ],
+   "strong": [
+    "payment_pressure"
+   ],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "adv1",
+   "kind": "suspicious",
+   "risk": "elevated",
+   "direct": [
+    "credential_request"
+   ],
+   "strong": [
+    "credential_request"
+   ],
+   "suppressed": 1,
+   "error": false
+  },
+  {
+   "id": "adv2",
+   "kind": "suspicious",
+   "risk": "high",
+   "direct": [
+    "credential_request",
+    "urgency"
+   ],
+   "strong": [
+    "credential_request"
+   ],
+   "suppressed": 1,
+   "error": false
+  },
+  {
+   "id": "adv3",
+   "kind": "suspicious",
+   "risk": "elevated",
+   "direct": [
+    "verification_bypass"
+   ],
+   "strong": [
+    "verification_bypass"
+   ],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "adv4",
+   "kind": "suspicious",
+   "risk": "elevated",
+   "direct": [
+    "secrecy_isolation",
+    "verification_bypass"
+   ],
+   "strong": [
+    "secrecy_isolation",
+    "verification_bypass"
+   ],
+   "suppressed": 0,
+   "error": false
+  },
+  {
+   "id": "adv5",
+   "kind": "suspicious",
+   "risk": "elevated",
+   "direct": [
+    "credential_request"
+   ],
+   "strong": [
+    "credential_request"
+   ],
+   "suppressed": 2,
+   "error": false
+  }
+ ]
+}

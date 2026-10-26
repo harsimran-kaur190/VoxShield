@@ -1,6 +1,7 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { analyzeAudio, ApiError, type Limits } from '../lib/api'
+import { RunTracker } from '../lib/runTracker'
 import type { AnalysisReport, Stage, StageState } from '../lib/types'
 import { decodeWaveform, type Waveform } from '../lib/waveform'
 
@@ -8,7 +9,7 @@ export const STAGES: { id: Stage; label: string; detail: string }[] = [
   { id: 'decode', label: 'Reading audio', detail: 'Decoding to 16 kHz mono' },
   { id: 'transcription', label: 'Transcribing speech', detail: 'Whisper speech-to-text' },
   { id: 'voice', label: 'Checking voice authenticity', detail: 'Scoring windows of the recording' },
-  { id: 'intent', label: 'Looking for scam indicators', detail: 'Applying the transcript rules' },
+  { id: 'intent', label: 'Looking for scam indicators', detail: 'Checking the transcript sentence by sentence' },
 ]
 
 export type Progress = Record<Stage, StageState>
@@ -26,10 +27,12 @@ export type AnalysisState =
 
 export function useAnalysis(limits: Limits | null) {
   const [state, setState] = useState<AnalysisState>({ phase: 'idle' })
-  const controllerRef = useRef<AbortController | null>(null)
+  const [tracker] = useState(() => new RunTracker())
   const fileRef = useRef<File | null>(null)
-  const runRef = useRef(0)
   const waveformRef = useRef<WaveformState>(undefined)
+
+  // Leaving the page abandons the analysis: abort the request so the server stops after its current stage.
+  useEffect(() => () => tracker.cancel(), [tracker])
 
   const start = useCallback(
     async (file: File) => {
@@ -44,11 +47,8 @@ export function useAnalysis(limits: Limits | null) {
           return
         }
       }
-      controllerRef.current?.abort()
-      const controller = new AbortController()
-      controllerRef.current = controller
+      const run = tracker.begin()
       fileRef.current = file
-      const run = ++runRef.current
       waveformRef.current = undefined
       setState({
         phase: 'running',
@@ -60,7 +60,7 @@ export function useAnalysis(limits: Limits | null) {
       })
 
       void decodeWaveform(file).then((waveform) => {
-        if (runRef.current !== run) return
+        if (!run.isCurrent()) return
         waveformRef.current = waveform
         setState((current) => (current.phase === 'running' || current.phase === 'done' ? { ...current, waveform } : current))
       })
@@ -72,11 +72,11 @@ export function useAnalysis(limits: Limits | null) {
             setState((current) =>
               current.phase === 'running' ? { ...current, progress: { ...current.progress, [stage]: stageState } } : current,
             ),
-          controller.signal,
+          run.signal,
         )
-        if (runRef.current === run) setState({ phase: 'done', report, waveform: waveformRef.current, audio: file })
+        if (run.isCurrent()) setState({ phase: 'done', report, waveform: waveformRef.current, audio: file })
       } catch (error) {
-        if (controller.signal.aborted) return
+        if (run.signal.aborted) return
         setState({
           phase: 'error',
           canRetry: true,
@@ -84,7 +84,7 @@ export function useAnalysis(limits: Limits | null) {
         })
       }
     },
-    [limits],
+    [limits, tracker],
   )
 
   const retry = useCallback(() => {
@@ -93,11 +93,10 @@ export function useAnalysis(limits: Limits | null) {
 
   /** Aborts the request. The server stops after the stage it is currently running. */
   const reset = useCallback(() => {
-    controllerRef.current?.abort()
-    runRef.current++
+    tracker.cancel()
     fileRef.current = null
     setState({ phase: 'idle' })
-  }, [])
+  }, [tracker])
 
   return { state, start, retry, reset }
 }

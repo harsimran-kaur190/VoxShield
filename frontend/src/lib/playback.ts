@@ -1,6 +1,6 @@
 import { indicatorKey } from './highlight'
 import { formatTimestamp } from './highlight'
-import type { AnalysisReport, EvidenceRef, IntentIndicator, TranscriptSegment } from './types'
+import type { EvidenceRef, IntentIndicator, TranscriptSegment } from './types'
 
 const SEVERITY_RANK = { high: 2, medium: 1, low: 0 } as const
 
@@ -61,28 +61,6 @@ export function groupFindings(indicators: IntentIndicator[]): FindingGroup[] {
       SEVERITY_RANK[b.severity] - SEVERITY_RANK[a.severity] ||
       a.charStart - b.charStart,
   )
-}
-
-const INTENT_PART: Record<string, string> = {
-  high: 'strong scam indicators were found in the conversation',
-  elevated: 'notable scam indicators were found in the conversation',
-  weak_signals: 'only weak signals were found in the conversation',
-  none_detected: 'no scam indicators were found in the transcript',
-  inconclusive: 'the conversation check was inconclusive',
-  unavailable: 'the conversation check is unavailable',
-}
-
-function voicePart(voice: AnalysisReport['voice']): string {
-  if (voice.verdict === 'model_favors_fake') return 'the voice model favors “fake”'
-  if (voice.verdict === 'model_favors_real') return 'the voice model favors “real”'
-  if (voice.verdict === 'inconclusive') return 'the voice check was inconclusive'
-  return 'the voice check is unavailable'
-}
-
-/** One qualified sentence built from the two separate results. It never merges them into a single score. */
-export function summaryLine(report: AnalysisReport): string {
-  const intent = INTENT_PART[report.intent.risk] ?? INTENT_PART.unavailable
-  return `${intent.charAt(0).toUpperCase()}${intent.slice(1)}, and ${voicePart(report.voice)}. These are two separate assessments.`
 }
 
 export function positionLabel(seconds: number, duration: number): string {

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 export function UnderstandingResults() {
   return (
     <details className="group border-t border-line pt-6">
-      <summary className="flex cursor-pointer items-center justify-between gap-3 font-display text-2xl font-medium">
+      <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-3 font-display text-2xl font-medium">
         Understanding these results
         <ChevronDown className="size-5 text-ink-3 transition-transform group-open:rotate-180" aria-hidden />
       </summary>

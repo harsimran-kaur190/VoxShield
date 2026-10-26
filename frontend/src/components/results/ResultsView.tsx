@@ -4,10 +4,12 @@ import { useCallback, useMemo, useState } from 'react'
 import { useAudioPlayback } from '../../hooks/usePlayback'
 import { formatBytes, formatDuration } from '../../lib/format'
 import { indicatorKey } from '../../lib/highlight'
-import { findingSeekTime, groupFindings, summaryLine } from '../../lib/playback'
+import { findingSeekTime, groupFindings } from '../../lib/playback'
 import type { AnalysisReport } from '../../lib/types'
 import type { Waveform } from '../../lib/waveform'
 import { IntentSection } from './IntentSection'
+import { NextStep } from './NextStep'
+import { Overview } from './Overview'
 import { PlaybackProvider } from './PlaybackProvider'
 import { RecommendationsSection } from './RecommendationsSection'
 import { scrollToFinding, scrollToId, scrollToMark } from './scroll'
@@ -90,7 +92,6 @@ export function ResultsView({ report, waveform, audio = null, onReset, onRetry }
             <p className="mt-1 font-mono text-xs text-ink-3">
               {meta.format.toUpperCase()} · {formatDuration(meta.duration_seconds)} · {formatBytes(meta.size_bytes)}
             </p>
-            {report.status !== 'failed' && <p className="mt-4 text-lg leading-snug">{summaryLine(report)}</p>}
           </div>
           <button type="button" onClick={onReset} className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-paper hover:bg-accent">
             <RotateCcw className="size-4" aria-hidden />
@@ -114,29 +115,37 @@ export function ResultsView({ report, waveform, audio = null, onReset, onRetry }
           </div>
         )}
 
+        <Overview report={report} groups={groups} />
+
+        {report.status !== 'failed' && <NextStep plan={report.recommendations} onRetry={onRetry} />}
+
         <Timeline report={report} waveform={waveform} groups={groups} selected={selected} onSelect={selectFinding} onChooseAgain={onReset} />
 
-        <div className="grid gap-12 lg:grid-cols-[5fr_7fr] lg:gap-0">
+        {/* Same order as the overview: what is said (the evidence you can act on) first, then how the voice sounds. */}
+        <div className="grid gap-12 lg:grid-cols-[7fr_5fr] lg:gap-0">
           <div className="lg:pr-12">
-            <VoiceSection voice={report.voice} />
+            <IntentSection intent={report.intent} transcript={report.transcript} groups={groups} selected={selected} onSelect={selectFinding} onShowInTranscript={showInTranscript} />
           </div>
           <div className="lg:border-l lg:border-line lg:pl-12">
-            <IntentSection intent={report.intent} transcript={report.transcript} groups={groups} selected={selected} onSelect={selectFinding} onShowInTranscript={showInTranscript} />
+            <VoiceSection voice={report.voice} />
           </div>
         </div>
 
         <TranscriptWorkspace transcript={report.transcript} indicators={report.intent.indicators} selected={selected} onSelect={selectFinding} />
-        <RecommendationsSection
-          plan={report.recommendations}
-          knownFindings={knownFindings}
-          onSelectFinding={selectFromRecommendation}
-          onShowVoice={() => scrollToId('voice-heading')}
-          onRetry={onRetry}
-        />
+        {/* With nothing to act on, the summary at the top already says what this section would. A failed analysis has no summary there, so it keeps this one for its retry button. */}
+        {(report.recommendations.state === 'actions' || report.status === 'failed') && (
+          <RecommendationsSection
+            plan={report.recommendations}
+            knownFindings={knownFindings}
+            onSelectFinding={selectFromRecommendation}
+            onShowVoice={() => scrollToId('voice-heading')}
+            onRetry={onRetry}
+          />
+        )}
         <UnderstandingResults />
 
         <p className="text-center text-sm text-ink-3">
-          Audio is deleted from the server after analysis and neither audio nor transcript is stored. Playback uses the copy in your browser, which is released when you leave this page.
+          Temporary copies of the audio are deleted from the server after analysis, and neither audio nor transcript is kept. Playback uses the copy in your browser, which is released when you leave this page.
           {note && ` ${note}`}
         </p>
       </div>

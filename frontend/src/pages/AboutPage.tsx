@@ -196,7 +196,7 @@ export function AboutPage() {
 
           <Section id="privacy" title="Privacy">
             <p className="text-ink-2">
-              Uploaded audio is streamed to a temporary file on the machine running the backend, analyzed, and deleted when the analysis ends, including on errors. Transcripts are returned to your browser and not stored or logged. There is no history. The waveform preview is drawn in your browser from the file you chose. Models are downloaded once from Hugging Face on first use.
+              Uploaded audio is written to temporary files on the machine running the backend (the web framework spools larger uploads while they arrive, then the app copies the file for decoding), analyzed, and deleted when the analysis ends, including on errors or when you leave the page. Deleting a file is not a secure erase, and the host may still hold data in caches or swap. Transcripts are returned to your browser and not kept or logged. There is no history. The waveform preview is drawn in your browser from the file you chose. Models are downloaded once from Hugging Face on first use.
             </p>
           </Section>
         </div>

@@ -34,7 +34,7 @@ export function DashboardPage() {
           </p>
           <p className="mt-6 flex max-w-lg items-start gap-2 text-sm text-ink-3">
             <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
-            Audio goes to a temporary file, is analyzed, and is deleted when the analysis ends. Neither audio nor transcript is stored.
+            Audio is written to temporary files while it is analyzed and deleted when the analysis ends. Audio and transcripts are not kept.
           </p>
           {backend.status === 'offline' && (
             <p role="alert" className="mt-4 text-sm text-danger">
