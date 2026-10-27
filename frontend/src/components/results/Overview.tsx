@@ -1,6 +1,7 @@
 import { AudioLines, MessageSquareText } from 'lucide-react'
 import type { ReactNode } from 'react'
 
+import { scamLanguageNotice, scamTranslationNotice } from '../../lib/languages'
 import { FAKE_SCORE_NAME, formatFakeScore } from '../../lib/score'
 import type { FindingGroup } from '../../lib/playback'
 import { INTENT_VIEW, VOICE_VIEW } from '../../lib/views'
@@ -66,6 +67,10 @@ export function Overview({ report, groups }: Props) {
   const flagged = groups.filter((g) => g.context === 'direct').length
   const intentDetail = intent.risk === 'unavailable' ? null : flagged > 0 ? `${flagged} passage${flagged === 1 ? '' : 's'} quoted from the transcript` : null
   const unsure = (risk: string) => risk === 'inconclusive' || risk === 'unavailable'
+  // When the language kept scam detection from running, say so instead of showing an empty or inconclusive verdict.
+  const languageNotice = scamLanguageNotice(report.language)
+  // A result from a translation is still shown, with the caveat beside it rather than hidden in the details.
+  const translationNotice = scamTranslationNotice(report.language)
   return (
     <section aria-labelledby="overview-heading">
       <h2 id="overview-heading" className="text-sm text-ink-2 sm:text-base">
@@ -76,11 +81,11 @@ export function Overview({ report, groups }: Props) {
           id="overview-intent"
           icon={<MessageSquareText className="size-4" />}
           kicker="Scam intent"
-          label={intentView.label}
-          dot={intentView.dot}
+          label={languageNotice ? languageNotice.label : intentView.label}
+          dot={languageNotice ? 'bg-line-strong' : intentView.dot}
           basis="Looks at what is said in the transcript, not at how the voice sounds."
-          detail={intentDetail}
-          uncertainty={unsure(intent.risk) ? intent.summary : null}
+          detail={languageNotice ? null : intentDetail}
+          uncertainty={languageNotice ? languageNotice.text : unsure(intent.risk) ? intent.summary : translationNotice}
           target="intent-heading"
         />
         <Panel

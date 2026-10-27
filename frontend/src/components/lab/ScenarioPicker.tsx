@@ -1,6 +1,8 @@
 import { Loader2, Play } from 'lucide-react'
 
+import { languageName } from '../../lib/languages'
 import { SAMPLE_LABEL, SCENARIOS, SCRIPT_LABEL } from '../../lib/scenarios'
+import { buttonClass } from '../ui/styles'
 
 interface Props {
   selectedId: string
@@ -44,6 +46,10 @@ export function ScenarioPicker({ selectedId, onSelect, onAnalyze, busy, blockedR
             <dt className="font-mono text-sm text-ink-3">What to look at in the result</dt>
             <dd className="mt-1 text-ink-2">{selected.lookFor}</dd>
           </div>
+          <div>
+            <dt className="font-mono text-sm text-ink-3">Language</dt>
+            <dd className="mt-1 text-ink-2">{languageName(selected.language)} (set for this sample, not guessed)</dd>
+          </div>
         </dl>
 
         <figure className="mt-6 border-l-2 border-line-strong pl-4">
@@ -62,13 +68,13 @@ export function ScenarioPicker({ selectedId, onSelect, onAnalyze, busy, blockedR
             type="button"
             onClick={onAnalyze}
             disabled={busy || blockedReason !== null}
-            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-ink px-6 py-2.5 font-medium text-paper hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+            className={buttonClass({ size: 'lg' })}
           >
             {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <Play className="size-4 fill-current" aria-hidden />}
             {busy ? 'Loading sample' : 'Analyze this sample'}
           </button>
           <p className="max-w-md text-sm text-ink-3">
-            {blockedReason ?? 'This sends the sample audio to the same analysis as an uploaded file. Nothing is kept after the analysis.'}
+            {blockedReason ?? 'Runs the same analysis as an uploaded file. The server keeps nothing.'}
           </p>
         </div>
       </section>

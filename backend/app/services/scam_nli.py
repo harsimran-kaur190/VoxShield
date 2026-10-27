@@ -22,6 +22,7 @@ from typing import Any
 from app.config import Settings
 from app.schemas_analysis import IntentAssessment, IntentIndicator, ModelInfo, TranscriptResult
 from app.services.interfaces import ComponentFailure
+from app.services.languages import scam_detection_block
 from app.services.scam_intent import summarize_direct, segment_at
 from app.services.scam_rules import QUOTE_MARKS, REPORTING, split_sentences
 import re
@@ -611,8 +612,9 @@ class NliScamIntentAnalyzer:
         method = self.method()
         if transcript.status != "ok" or not transcript.text.strip():
             return self._inconclusive("There was no usable transcript, so scam intent could not be assessed.", method)
-        if transcript.language and transcript.language != "en" and (transcript.language_probability or 0) >= 0.5:
-            return self._inconclusive(f"The speech was detected as '{transcript.language}'. The scam-intent model only supports English.", method)
+        blocked = scam_detection_block(transcript)
+        if blocked:
+            return self._inconclusive(blocked, method)
         return self.decide(transcript, self.score(transcript.text))
 
     @staticmethod

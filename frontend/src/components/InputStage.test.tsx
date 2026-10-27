@@ -11,7 +11,7 @@ const panel = (snapshot: Partial<RecorderSnapshot>, maxSeconds = 600) =>
   renderToStaticMarkup(<RecordPanel snapshot={{ ...IDLE, ...snapshot }} maxSeconds={maxSeconds} {...handlers} />)
 
 describe('InputStage', () => {
-  const html = renderToStaticMarkup(<InputStage limits={null} onFile={() => {}} />)
+  const html = renderToStaticMarkup(<InputStage limits={null} onFile={() => {}} language="auto" onLanguageChange={() => {}} />)
 
   it('offers Upload audio and Record audio as two equal tabs, with upload selected and unchanged', () => {
     expect(html).toContain('role="tablist"')

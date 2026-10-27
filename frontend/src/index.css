@@ -1,38 +1,60 @@
 @import 'tailwindcss';
 
+/*
+ * Design tokens. Every color, radius and shadow in the app comes from here, so the look changes in one place.
+ * Text colors are chosen for at least 4.5:1 contrast on both white and the slate secondary surface.
+ * Red (critical) is reserved for genuinely high-risk findings; operational problems use amber.
+ */
 @theme {
-  /* Surfaces: warm paper, with one dark "stage" reserved for audio */
-  --color-paper: #f4f1ea;
-  --color-paper-2: #ebe7dc;
-  --color-card: #fbf9f4;
-  --color-line: #d9d4c6;
-  --color-line-strong: #bdb6a3;
-  --color-stage: #0d1017;
-  --color-stage-2: #161b26;
-  --color-stage-line: #2a3242;
+  /* Surfaces */
+  --color-paper: #ffffff; /* page background */
+  --color-paper-2: #f1f5f9; /* secondary surface, hover fill */
+  --color-card: #ffffff;
+  --color-line: #e2e8f0;
+  --color-line-strong: #cbd5e1;
+  /* The audio "stage" (input, waveform, timeline) is a light panel with its own muted surface */
+  --color-stage: #ffffff;
+  --color-stage-2: #f1f5f9;
+  --color-stage-line: #e2e8f0;
 
   /* Ink */
-  --color-ink: #14161b;
-  --color-ink-2: #444a56;
-  --color-ink-3: #5d636f;
-  --color-stage-ink: #e9edf6;
-  --color-stage-muted: #9aa3b5;
+  --color-ink: #0f172a;
+  --color-ink-2: #334155;
+  --color-ink-3: #475569;
+  --color-stage-ink: #0f172a;
+  --color-stage-muted: #475569;
 
-  /* Accents */
-  --color-accent: #1e4fff;
-  --color-accent-deep: #1536b8;
-  --color-accent-tint: #e4eaff;
-  --color-accent-light: #7ea0ff;
-  --color-amber: #8a4f00;
-  --color-amber-tint: #f6e3bd;
-  --color-amber-light: #f5b942;
-  --color-danger: #b3261e;
-  --color-rec: #ff6b6b;
-  --color-ok: #0b6b5f;
+  /* Accent: interactive elements, links, focus */
+  --color-accent: #1d4ed8;
+  --color-accent-deep: #1e40af;
+  --color-accent-tint: #dbeafe;
+  --color-accent-light: #60a5fa; /* decorative only: dots, rings, highlight borders */
 
-  --font-display: 'Fraunces Variable', 'Fraunces', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  /* Status */
+  --color-amber: #92400e; /* warning text */
+  --color-amber-tint: #fef3c7;
+  --color-amber-light: #f59e0b; /* decorative only */
+  --color-ok: #047857;
+  --color-ok-tint: #ecfdf5;
+  --color-critical: #dc2626; /* high-risk findings only */
+  --color-critical-tint: #fef2f2;
+  --color-rec: #dc2626; /* the small "recording" dot */
+
+  --font-display: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-sans: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Shape and depth. Spacing uses Tailwind's 4px scale. */
+  --radius-control: 0.5rem; /* buttons, inputs, badges' corners */
+  --radius-card: 0.875rem; /* cards and panels */
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.06);
+  --shadow-raised: 0 2px 4px -1px rgb(15 23 42 / 0.05), 0 12px 28px -8px rgb(15 23 42 / 0.12);
+}
+
+/* Inside the light audio panels the decorative accents are also used for text and icons, so they get darker values. */
+.on-stage {
+  --color-accent-light: #2563eb;
+  --color-amber-light: #b45309;
 }
 
 html {
@@ -51,13 +73,16 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+h1,
+h2,
+h3 {
+  letter-spacing: -0.015em;
+}
+
 :focus-visible {
   outline: 2px solid var(--color-accent);
-  outline-offset: 3px;
+  outline-offset: 2px;
   border-radius: 4px;
-}
-.on-stage :focus-visible {
-  outline-color: var(--color-accent-light);
 }
 
 summary {
@@ -83,6 +108,20 @@ summary::-webkit-details-marker {
 }
 .rise {
   animation: rise 0.45s ease-out both;
+}
+/* Soft ring that spreads out from the caller avatar on the simulated call screen. */
+@keyframes call-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.35;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+.call-ring {
+  animation: call-ring 2.4s ease-out infinite;
 }
 @keyframes sweep {
   0% {

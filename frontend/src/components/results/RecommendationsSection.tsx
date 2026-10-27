@@ -114,7 +114,7 @@ export function RecommendationsSection({ plan, knownFindings, onSelectFinding, o
   const more = rest.filter((rec) => rec.secondary)
   const handlers: Handlers = { known: knownFindings, onSelectFinding, onShowVoice }
   return (
-    <section aria-labelledby="steps-heading" className="rounded-3xl bg-ink p-6 text-paper sm:p-9">
+    <section aria-labelledby="steps-heading" className="rounded-card bg-ink p-6 text-paper shadow-raised sm:p-9">
       <h2 id="steps-heading" className="font-display text-3xl font-medium">
         What to do next
       </h2>

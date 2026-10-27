@@ -9,16 +9,45 @@ from app.schemas_analysis import (
     AnalysisReport,
     ComponentError,
     IntentAssessment,
+    LanguageInfo,
     ModelInfo,
     TranscriptResult,
     VoiceAssessment,
 )
 from app.services.audio_io import AudioDecodeError, load_mono_16k
 from app.services.interfaces import ComponentFailure, ScamIntentAnalyzer, Transcriber, VoiceAuthenticityClassifier
+from app.services.languages import AUTO, TRANSCRIPTION_NOTE, TRANSLATION_NOTE, VOICE_NOTE, language_name, scam_detection_route, whisper_code
+from app.services.multilingual_intent import combine
+from app.services.scam_rules_indic import METHOD as INDIC_METHOD
 from app.services.recommendations import build_recommendations
 
 logger = logging.getLogger("voxshield.pipeline")
 STAGES = ("decode", "transcription", "voice", "intent")
+
+
+def language_info(requested: str, transcript: TranscriptResult) -> LanguageInfo:
+    """What language was asked for and what was used, from the transcript only. Nothing is guessed: with no transcript
+    language the source is "unknown" and no scam-detection verdict about the language is made."""
+    code = transcript.language if transcript.status != "unavailable" else None
+    source = transcript.language_source if code else None
+    route, note = scam_detection_route(transcript) if transcript.status == "ok" else (None, None)
+    return LanguageInfo(
+        requested=requested,  # type: ignore[arg-type]
+        code=code,
+        name=language_name(code),
+        source=source or "unknown",
+        detection_score=transcript.language_probability if source == "detected" else None,
+        detected_code=transcript.detected_language,
+        detected_name=language_name(transcript.detected_language),
+        detected_score=transcript.detected_language_score,
+        mismatch=transcript.language_mismatch,
+        scam_detection_supported=None if not code else route != "not_run",
+        scam_detection_note=note,
+        scam_detection_mode=route,
+        translation_note=TRANSLATION_NOTE if route == "translated" else None,
+        transcription_note=TRANSCRIPTION_NOTE if code == "hi" else None,
+        voice_note=VOICE_NOTE,
+    )
 
 
 def _stage(stage: str, state: str) -> dict[str, Any]:
@@ -38,8 +67,10 @@ class AnalysisPipeline:
         self._voice = voice
         self._intent = intent
 
-    def run(self, audio_path, metadata: AudioMetadata) -> Iterator[dict[str, Any]]:
-        """Yield progress events, then a final {'type': 'report', 'report': AnalysisReport}."""
+    def run(self, audio_path, metadata: AudioMetadata, language: str = AUTO) -> Iterator[dict[str, Any]]:
+        """Yield progress events, then a final {'type': 'report', 'report': AnalysisReport}.
+
+        `language` is one of the values parsed by app.services.languages.parse_requested_language."""
         errors: list[ComponentError] = []
         timings: dict[str, float] = {}
         request_started = time.perf_counter()
@@ -51,7 +82,7 @@ class AnalysisPipeline:
         except AudioDecodeError as error:
             yield _stage("decode", "failed")
             errors.append(ComponentError(component="audio", code="decode_failed", message=str(error)))
-            yield {"type": "report", "report": self._failed_report(metadata, errors)}
+            yield {"type": "report", "report": self._failed_report(metadata, errors, language)}
             return
         timings["decode"] = round(time.perf_counter() - started, 2)
         yield _stage("decode", "done")
@@ -60,7 +91,7 @@ class AnalysisPipeline:
         started = time.perf_counter()
         loaded_before = self._is_loaded(self._transcriber)
         transcript = self._guard(
-            "transcription", errors, lambda: self._transcriber.transcribe(audio), self._transcript_unavailable
+            "transcription", errors, lambda: self._transcriber.transcribe(audio, language=whisper_code(language)), self._transcript_unavailable
         )
         self._record(timings, "transcription", started, self._transcriber, loaded_before)
         yield _stage("transcription", "failed" if transcript.status == "unavailable" else "done")
@@ -73,10 +104,14 @@ class AnalysisPipeline:
         yield _stage("voice", "failed" if voice.verdict == "unavailable" else "done")
 
         yield _stage("intent", "running")
+        route = scam_detection_route(transcript)[0] if transcript.status == "ok" else None
+        translation = self._translate(audio, transcript, errors, timings) if route == "translated" else None
         started = time.perf_counter()
         loaded_before = self._is_loaded(self._intent)
         if transcript.status == "unavailable":
             intent = self._intent_unavailable("Scam intent needs a transcript, and transcription was unavailable.")
+        elif route == "translated":
+            intent = self._translated_intent(transcript, translation, errors)
         else:
             intent = self._guard(
                 "intent", errors, lambda: self._intent.analyze(transcript), self._intent_unavailable
@@ -94,17 +129,49 @@ class AnalysisPipeline:
         status = "failed" if transcript.status == "unavailable" and voice.verdict == "unavailable" else (
             "partial" if any(unavailable) else "complete"
         )
+        meta = language_info(language, transcript)
         report = AnalysisReport(
             status=status,
             audio=metadata,
             transcript=transcript,
             voice=voice,
             intent=intent,
-            recommendations=build_recommendations(voice, intent, transcript),
+            recommendations=build_recommendations(voice, intent, transcript, scam_check_ran=meta.scam_detection_mode != "not_run"),
             errors=errors,
+            language=meta,
+            translation=translation,
             timings_seconds=timings,
         )
         yield {"type": "report", "report": report}
+
+    def _translate(self, audio, transcript: TranscriptResult, errors: list[ComponentError], timings: dict[str, float]) -> TranscriptResult:
+        """Whisper's English translation of the audio, for scam detection only. A failure is reported and never fails the
+        analysis: the keyword rules on the original transcript still run."""
+        started = time.perf_counter()
+        translate = getattr(self._transcriber, "translate", None)
+        if translate is None:
+            result = TranscriptResult(status="unavailable", error="This server's speech-to-text component cannot translate.")
+        else:
+            result = self._guard(
+                "transcription", errors, lambda: translate(audio, transcript.language), self._transcript_unavailable
+            )
+        timings["translation"] = round(time.perf_counter() - started, 2)
+        return result
+
+    def _translated_intent(self, transcript: TranscriptResult, translation: TranscriptResult | None, errors: list[ComponentError]) -> IntentAssessment:
+        translated, problem = None, None
+        if translation is None or translation.status == "unavailable":
+            problem = (translation.error if translation else None) or "No English translation could be made."
+        elif translation.status == "no_speech" or not translation.text.strip():
+            problem = "The English translation came back empty."
+        else:
+            translated = self._guard("intent", errors, lambda: self._intent.analyze(translation), self._intent_unavailable)
+            if translated.risk == "unavailable":
+                problem, translated = translated.error, None
+        intent = combine(translated, transcript, problem)
+        if translated is None:
+            intent = intent.model_copy(update={"method": INDIC_METHOD, "detector": "rules"})
+        return intent
 
     @staticmethod
     def _is_loaded(component: Any) -> bool:
@@ -152,7 +219,7 @@ class AnalysisPipeline:
             error=message,
         )
 
-    def _failed_report(self, metadata: AudioMetadata, errors: list[ComponentError]) -> AnalysisReport:
+    def _failed_report(self, metadata: AudioMetadata, errors: list[ComponentError], language: str = AUTO) -> AnalysisReport:
         voice = self._voice_unavailable(errors[0].message)
         intent = self._intent_unavailable(errors[0].message)
         return AnalysisReport(
@@ -163,4 +230,5 @@ class AnalysisPipeline:
             intent=intent,
             recommendations=build_recommendations(voice, intent),
             errors=errors,
+            language=language_info(language, self._transcript_unavailable(errors[0].message)),
         )

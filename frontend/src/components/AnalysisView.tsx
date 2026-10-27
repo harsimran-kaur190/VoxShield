@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 
 import { STAGES, type Progress, type WaveformState } from '../hooks/useAnalysis'
 import { formatBytes, formatDuration } from '../lib/format'
+import { LANGUAGE_OPTIONS, type LanguageChoice } from '../lib/languages'
+import { buttonClass } from './ui/styles'
 import { Waveform } from './Waveform'
 
 const SLOW_AFTER_SECONDS = 15
@@ -14,9 +16,10 @@ interface Props {
   progress: Progress
   startedAt: number
   onCancel: () => void
+  language?: LanguageChoice
 }
 
-export function AnalysisView({ fileName, fileSize, waveform, progress, startedAt, onCancel }: Props) {
+export function AnalysisView({ fileName, fileSize, waveform, progress, startedAt, onCancel, language }: Props) {
   const [elapsed, setElapsed] = useState(0)
   useEffect(() => {
     const timer = setInterval(() => setElapsed(Math.floor((Date.now() - startedAt) / 1000)), 500)
@@ -30,9 +33,10 @@ export function AnalysisView({ fileName, fileSize, waveform, progress, startedAt
       <p className="mt-2 font-mono text-sm text-ink-3">
         {formatBytes(fileSize)}
         {waveform && ` · ${formatDuration(waveform.duration)}`}
+        {language && ` · language: ${LANGUAGE_OPTIONS.find((o) => o.code === language)?.label ?? language}`}
       </p>
 
-      <div className="on-stage mt-8 rounded-3xl bg-stage p-6 text-stage-ink ring-1 ring-stage-line sm:p-8">
+      <div className="on-stage mt-8 rounded-card border border-line bg-stage p-6 text-stage-ink shadow-card sm:p-8">
         <div className="h-28 text-accent-light">
           {waveform ? (
             <Waveform peaks={waveform.peaks} className="h-full w-full" />
@@ -56,7 +60,7 @@ export function AnalysisView({ fileName, fileSize, waveform, progress, startedAt
               <span className="grid size-6 place-items-center">
                 {state === 'done' && <Check className="size-5 text-ok" aria-hidden />}
                 {state === 'running' && <Loader2 className="size-5 animate-spin text-accent" aria-hidden />}
-                {state === 'failed' && <XCircle className="size-5 text-danger" aria-hidden />}
+                {state === 'failed' && <XCircle className="size-5 text-amber" aria-hidden />}
                 {state === 'pending' && <Circle className="size-4 text-line-strong" aria-hidden />}
               </span>
               <span className="flex-1">
@@ -81,7 +85,7 @@ export function AnalysisView({ fileName, fileSize, waveform, progress, startedAt
         <button
           type="button"
           onClick={onCancel}
-          className="inline-flex items-center gap-2 rounded-full border border-line-strong px-4 py-2 text-sm hover:bg-paper-2"
+          className={buttonClass({ variant: 'secondary' })}
         >
           <X className="size-4" aria-hidden />
           Cancel

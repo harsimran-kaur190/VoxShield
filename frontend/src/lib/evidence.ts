@@ -11,8 +11,11 @@ export function hasUsableTiming(segment: Pick<TranscriptSegment, 'start_seconds'
 }
 
 /** Where a finding came from, in plain words. Only describes stages that actually produced it. */
-export function findingSource(indicator: Pick<IntentIndicator, 'detector'>): string {
-  return indicator.detector === 'nli'
+export function findingSource(source: Pick<IntentIndicator, 'detector'> & { analyzed_text?: 'transcript' | 'translation' }): string {
+  if (source.analyzed_text === 'translation') {
+    return `Scam-intent analysis (${source.detector === 'nli' ? 'language model' : 'fixed text rules'}) of an English machine translation of the speech, plus Hindi keyword rules on the original transcript. The voice analysis was not used.`
+  }
+  return source.detector === 'nli'
     ? 'Scam-intent analysis (language model) of the speech-to-text transcript. The voice analysis was not used.'
     : 'Scam-intent analysis (fixed text rules) of the speech-to-text transcript. The voice analysis was not used.'
 }

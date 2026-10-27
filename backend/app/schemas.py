@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel
 
 
@@ -7,11 +9,20 @@ class HealthResponse(BaseModel):
     version: str
 
 
+class LanguageChoice(BaseModel):
+    code: str
+    name: str
+    scam_detection_validated: bool | None = None  # None for auto-detect: it depends on the language that is found
+    # How scam detection treats this language: read directly ("direct", English) or through a translation ("translated").
+    scam_detection: Literal["direct", "translated"] | None = None
+
+
 class LimitsResponse(BaseModel):
     max_upload_mb: int
     min_duration_seconds: float
     max_duration_seconds: float
     allowed_extensions: list[str]
+    languages: list[LanguageChoice] = []
 
 
 class AudioMetadata(BaseModel):

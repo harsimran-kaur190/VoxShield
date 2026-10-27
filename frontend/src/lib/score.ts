@@ -26,14 +26,24 @@ export function scaleOffset(score: number): string {
  * accuracy, or confidence of its own.
  */
 export const VOICE_READING: Record<VoiceVerdict, string> = {
-  model_favors_real: 'By its own decision rule the model leans toward its “real” label for this audio. That is a model reading, not confirmation that the voice is genuine.',
-  model_favors_fake: 'By its own decision rule the model leans toward its “fake” label for this audio. That does not show the recording was generated, and it says nothing about whether the words are a scam.',
+  model_favors_real: 'By VoxShield’s decision rule the voice check leans toward the “real” label for this audio. That is a model reading, not confirmation that the voice is genuine.',
+  model_favors_fake: 'By VoxShield’s decision rule the voice check leans toward the “fake” label for this audio. That does not show the recording was generated, and it says nothing about whether the words are a scam.',
   inconclusive: 'The windows disagreed or sat close to the middle, so the model does not lean either way.',
   unavailable: 'The voice check could not run, so there is no voice result.',
 }
 
-/** The backend's summary ends with this exact sentence when the model leans "fake"; it refers to the exploratory spot check. */
-const SPOT_CHECK_ASIDE = " It did the same for some real recordings in VoxShield's spot check."
+const DETECTOR_NAMES: Record<string, string> = { 'nii-yamagishilab': 'NII AntiDeepfake', Gustking: 'Gustking' }
+
+/** A readable name for a voice detector, from its model id. */
+export const detectorName = (modelName: string) => DETECTOR_NAMES[modelName.split('/')[0]] ?? modelName
+
+export const AUDIO_BAND_LABEL = { full_band: 'Full band', narrowband: 'Phone or VoIP quality (narrowband)', unknown: 'Too short to tell' } as const
+
+/** The cut-off the backend applied, as a percentage. Reports from before it was sent always used 50%. */
+export const fakeCutoffPercent = (cutoff: number | null | undefined) => `${Math.round((cutoff ?? 0.5) * 100)}%`
+
+/** The backend's summary ends with this exact sentence when the model leans "fake"; it refers to VoxShield's benchmark. */
+const SPOT_CHECK_ASIDE = " On phone-quality audio it did the same for a few real voices in VoxShield's benchmark."
 
 /**
  * Separates that one known sentence from the rest of the backend summary, so the spot-check detail can sit with the

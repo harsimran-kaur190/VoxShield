@@ -24,7 +24,11 @@ export function lessonFor(report: AnalysisReport, syntheticInput: boolean): Less
     cannot.push('A flagged passage is a clue, not proof of fraud. Real organizations also say some of these things.')
   } else if (intent.risk === 'none_detected') {
     can.push('The scam check found no suspicious request in the transcript.')
-    cannot.push('Finding nothing is not a clearance. The check looks for common English wording and depends on the transcript being correct.')
+    cannot.push(
+      intent.analyzed_text === 'translation'
+        ? 'Finding nothing is not a clearance. The check read a machine translation, which can lose a request, and depends on the transcript and translation being correct.'
+        : 'Finding nothing is not a clearance. The check looks for common English wording and depends on the transcript being correct.',
+    )
   } else if (intent.risk === 'inconclusive' || intent.risk === 'unavailable') {
     can.push('The scam check could not reach an answer for this recording, and says so instead of guessing.')
   } else if (intent.risk === 'weak_signals') {

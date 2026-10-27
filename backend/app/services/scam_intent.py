@@ -1,4 +1,5 @@
 from app.schemas_analysis import IntentAssessment, IntentIndicator, ModelInfo, TranscriptResult
+from app.services.languages import scam_detection_block
 from app.services.scam_rules import RULES, is_negated, is_reported, split_sentences
 
 METHOD = ModelInfo(
@@ -55,10 +56,9 @@ class RuleBasedScamIntentAnalyzer:
     def analyze(self, transcript: TranscriptResult) -> IntentAssessment:
         if transcript.status != "ok" or not transcript.text.strip():
             return self._inconclusive("There was no usable transcript, so scam intent could not be assessed.")
-        if transcript.language and transcript.language != "en" and (transcript.language_probability or 0) >= 0.5:
-            return self._inconclusive(
-                f"The speech was detected as '{transcript.language}'. The scam-intent rules only support English."
-            )
+        blocked = scam_detection_block(transcript)
+        if blocked:
+            return self._inconclusive(blocked)
 
         text = transcript.text
         found: list[IntentIndicator] = []

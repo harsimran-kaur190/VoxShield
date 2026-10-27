@@ -46,7 +46,7 @@ function PlayerBar({ controller, state }: { controller: AudioController | null; 
         onClick={() => controller?.toggle()}
         disabled={!playable}
         aria-label={state.playing ? 'Pause recording' : 'Play recording'}
-        className="grid size-11 place-items-center rounded-full bg-accent text-white transition hover:bg-accent-light hover:text-stage disabled:cursor-not-allowed disabled:opacity-40"
+        className="grid size-11 place-items-center rounded-full bg-accent text-white shadow-card transition hover:bg-accent-deep disabled:cursor-not-allowed disabled:opacity-40"
       >
         {state.status === 'loading' ? <Loader2 className="size-5 animate-spin" aria-hidden /> : state.playing ? <Pause className="size-5 fill-current" aria-hidden /> : <Play className="ml-0.5 size-5 fill-current" aria-hidden />}
       </button>
@@ -94,8 +94,8 @@ function Playhead({ duration, peaks }: { duration: number; peaks: number[] | und
           <StaticWaveform peaks={peaks} className="h-full w-full text-accent-light" />
         </div>
       )}
-      <div className="pointer-events-none absolute inset-y-0 w-0.5 -translate-x-1/2 bg-white shadow-[0_0_0_1px_rgba(13,16,23,0.6)]" style={{ left: `${progress}%` }} aria-hidden>
-        <span className="absolute -top-0.5 left-1/2 size-2.5 -translate-x-1/2 rounded-full bg-white" />
+      <div className="pointer-events-none absolute inset-y-0 w-0.5 -translate-x-1/2 bg-ink shadow-[0_0_0_1px_rgba(255,255,255,0.8)]" style={{ left: `${progress}%` }} aria-hidden>
+        <span className="absolute -top-0.5 left-1/2 size-2.5 -translate-x-1/2 rounded-full bg-ink" />
       </div>
     </>
   )
@@ -159,7 +159,7 @@ function Scrubber({ controller, state, waveform, selectedRange, duration }: { co
       onPointerCancel={() => (dragging.current = false)}
       className={`relative h-28 touch-pan-y select-none overflow-hidden rounded-xl bg-stage-2 ${enabled ? 'cursor-pointer' : 'cursor-default'}`}
     >
-      {waveform && <StaticWaveform peaks={waveform.peaks} className="absolute inset-0 h-full w-full text-[#4a5670]" />}
+      {waveform && <StaticWaveform peaks={waveform.peaks} className="absolute inset-0 h-full w-full text-line-strong" />}
       {!waveform && (
         <p className="absolute inset-0 grid place-items-center px-4 text-center text-sm text-stage-muted">
           {waveform === undefined ? 'Reading the waveform…' : 'No waveform preview for this file in your browser.'}
@@ -192,7 +192,7 @@ export function Timeline({ report, waveform, groups, selected, onSelect, onChoos
   const ticks = [0, 0.25, 0.5, 0.75, 1]
 
   return (
-    <section aria-labelledby="timeline-heading" className="on-stage rounded-3xl bg-stage p-5 text-stage-ink sm:p-7">
+    <section aria-labelledby="timeline-heading" className="on-stage rounded-card border border-line bg-stage p-5 text-stage-ink shadow-card sm:p-7">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="timeline-heading" className="font-display text-xl font-medium">
           Recording timeline
@@ -205,7 +205,7 @@ export function Timeline({ report, waveform, groups, selected, onSelect, onChoos
         {state.status === 'unavailable' && (
           <p role="status" className="mt-3 text-sm text-stage-muted">
             The audio isn’t available in this session, because VoxShield doesn’t keep recordings after analysis.{' '}
-            <button type="button" onClick={onChooseAgain} className="text-accent-light underline underline-offset-4 hover:text-white">
+            <button type="button" onClick={onChooseAgain} className="text-accent-light underline underline-offset-4 hover:text-accent-deep">
               Upload or record it again
             </button>{' '}
             to listen.
@@ -214,7 +214,7 @@ export function Timeline({ report, waveform, groups, selected, onSelect, onChoos
         {state.status === 'error' && (
           <p role="alert" className="mt-3 text-sm text-amber-light">
             {state.error}{' '}
-            <button type="button" onClick={onChooseAgain} className="underline underline-offset-4 hover:text-white">
+            <button type="button" onClick={onChooseAgain} className="underline underline-offset-4 hover:text-accent-deep">
               Choose the file again
             </button>
           </p>
@@ -269,7 +269,7 @@ export function Timeline({ report, waveform, groups, selected, onSelect, onChoos
                   if (group.start_seconds !== null) controller?.seek(group.start_seconds)
                   setAnnounce(`Selected the finding at ${when}`)
                 }}
-                className={`absolute top-1/2 grid size-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full transition ${active ? 'scale-125 ring-2 ring-white' : ''}`}
+                className={`absolute top-1/2 grid size-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full transition ${active ? 'scale-125 ring-2 ring-accent' : ''}`}
                 style={{ left: pct(group.start_seconds ?? 0, duration), marginTop: index % 2 ? 5 : -5 }}
               >
                 <span className={`size-3.5 rounded-full ${reported ? 'border-2 border-accent-light bg-stage' : 'bg-amber-light'}`} />
@@ -291,7 +291,7 @@ export function Timeline({ report, waveform, groups, selected, onSelect, onChoos
 
       <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-stage-muted">
         <li className="flex items-center gap-2">
-          <span className="h-3.5 w-0.5 bg-white" aria-hidden /> Playhead
+          <span className="h-3.5 w-0.5 bg-ink" aria-hidden /> Playhead
         </li>
         <li className="flex items-center gap-2">
           <span className="h-3 w-5 rounded-sm bg-accent-light/40" aria-hidden /> Voice window and its score

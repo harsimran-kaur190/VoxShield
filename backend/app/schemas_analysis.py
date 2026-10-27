@@ -34,11 +34,41 @@ class TranscriptResult(BaseModel):
     status: Literal["ok", "no_speech", "unavailable"]
     text: str = ""
     language: str | None = None
+    # Only set when the language was detected. A language the user selected has no detection score, and none is made up.
     language_probability: float | None = None
+    # "translated": this is Whisper's English translation of the audio, not what was said.
+    language_source: Literal["detected", "selected", "translated"] | None = None
+    # In manual mode the model's own guess about the audio, used only to warn when it disagrees with the selection.
+    detected_language: str | None = None
+    detected_language_score: float | None = None
+    language_mismatch: bool = False
     segments: list[TranscriptSegment] = []
     quality_notes: list[str] = []
     model: ModelInfo | None = None
     error: str | None = None
+
+
+class LanguageInfo(BaseModel):
+    """What language was asked for, what was used, and what is and is not known about it. The transcript stays in the
+    spoken language; a translation, when one was used for scam detection, is reported separately."""
+
+    requested: Literal["auto", "en", "hi"]
+    code: str | None = None  # language of the transcript; None when it could not be determined
+    name: str | None = None
+    source: Literal["detected", "selected", "unknown"] = "unknown"
+    detection_score: float | None = None  # only for source == "detected"
+    detected_code: str | None = None  # manual mode: what the audio sounded like
+    detected_name: str | None = None
+    detected_score: float | None = None
+    mismatch: bool = False
+    scam_detection_supported: bool | None = None  # None: the language is unknown
+    scam_detection_note: str | None = None
+    # "direct": the English detectors read the transcript. "translated": they read an English translation of the audio.
+    # "not_run": no scam result was made (see scam_detection_note). None: no transcript to decide from.
+    scam_detection_mode: Literal["direct", "translated", "not_run"] | None = None
+    translation_note: str | None = None
+    transcription_note: str | None = None
+    voice_note: str
 
 
 class VoiceWindow(BaseModel):
@@ -48,6 +78,17 @@ class VoiceWindow(BaseModel):
 
 
 VoiceVerdict = Literal["model_favors_fake", "model_favors_real", "inconclusive", "unavailable"]
+
+
+class VoiceDetectorResult(BaseModel):
+    """One detector's own reading, so a combined result always shows which model leaned which way."""
+
+    model: ModelInfo
+    verdict: VoiceVerdict
+    fake_score_median: float | None = None
+    windows_analyzed: int = 0
+    windows_favoring_fake: int = 0
+    error: str | None = None
 
 
 class VoiceAssessment(BaseModel):
@@ -67,6 +108,12 @@ class VoiceAssessment(BaseModel):
     limitations: list[str] = []
     model: ModelInfo | None = None
     error: str | None = None
+    # Every detector that ran, in order. Empty when a single detector produced the result.
+    detectors: list[VoiceDetectorResult] = []
+    # "narrowband": phone or VoIP quality, nothing above about 3.4-4 kHz. "unknown": too short to measure.
+    audio_band: Literal["full_band", "narrowband", "unknown"] | None = None
+    # The window score from which the result counts as leaning "fake". 0.5 unless the audio is full band.
+    fake_cutoff: float | None = None
 
 
 IntentRisk = Literal["none_detected", "weak_signals", "elevated", "high", "inconclusive", "unavailable"]
@@ -88,6 +135,11 @@ class IntentIndicator(BaseModel):
     context: Literal["direct", "reported"] = "direct"
     detector: Literal["rules", "nli"] = "rules"
     score: float | None = None  # NLI entailment score for model findings; None for rule findings
+    # Which text the character offsets and segment_index point into: the original transcript, or the English translation.
+    text_source: Literal["transcript", "translation"] = "transcript"
+    # For a finding in the translation: the original-language transcript text spoken at the same time, as evidence.
+    original_text: str | None = None
+    original_segment_index: int | None = None
     trigger: str = ""
     explanation: str
     suggested_action: str
@@ -103,6 +155,8 @@ class IntentAssessment(BaseModel):
     reported_mentions: int = 0
     uncertain_mentions: int = 0
     detector: Literal["rules", "nli"] = "rules"
+    # "translation": the detector read an English translation of non-English speech (see AnalysisReport.translation).
+    analyzed_text: Literal["transcript", "translation"] = "transcript"
     score_note: str | None = None
     limitations: list[str] = []
     method: ModelInfo | None = None
@@ -157,6 +211,9 @@ class AnalysisReport(BaseModel):
     intent: IntentAssessment
     recommendations: RecommendationPlan
     errors: list[ComponentError] = []
+    language: LanguageInfo | None = None
+    # Whisper's English translation of the audio, made only to run scam detection on Hindi or Urdu speech.
+    translation: TranscriptResult | None = None
     privacy: Privacy = Privacy()
     timings_seconds: dict[str, float] = {}
     notice: str = NOTICE

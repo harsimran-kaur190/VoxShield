@@ -3,6 +3,7 @@ import { AlertTriangle, Loader2, Mic, RotateCcw, Square, Trash2, Upload } from '
 import { formatBytes } from '../lib/format'
 import { formatTimestamp } from '../lib/highlight'
 import { LEVEL_BARS, type RecorderSnapshot } from '../lib/recorderSession'
+import { buttonClass } from './ui/styles'
 import { Waveform } from './Waveform'
 
 interface Props {
@@ -15,8 +16,8 @@ interface Props {
   onUseUpload: () => void
 }
 
-const PRIMARY = 'inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition'
-const SECONDARY = 'inline-flex items-center gap-2 rounded-full border border-stage-line px-4 py-3 text-sm text-stage-ink hover:border-accent-light'
+const PRIMARY = buttonClass({ size: 'lg' })
+const SECONDARY = buttonClass({ variant: 'secondary', size: 'lg' })
 
 export function RecordPanel({ snapshot, maxSeconds, onStart, onStop, onDiscard, onAnalyze, onUseUpload }: Props) {
   const { status, elapsed, levels, error, result } = snapshot
@@ -44,7 +45,7 @@ export function RecordPanel({ snapshot, maxSeconds, onStart, onStop, onDiscard, 
             <p className="mt-2 text-sm text-stage-muted">
               It captures sound your device’s microphone can hear, such as a call on speakerphone. It can’t record a phone call’s audio directly.
             </p>
-            <button type="button" onClick={onStart} className={`${PRIMARY} mt-5 bg-accent text-white hover:bg-accent-light hover:text-stage`}>
+            <button type="button" onClick={onStart} className={`${PRIMARY} mt-5`}>
               <Mic className="size-4" aria-hidden />
               Start recording
             </button>
@@ -73,12 +74,12 @@ export function RecordPanel({ snapshot, maxSeconds, onStart, onStop, onDiscard, 
               {formatTimestamp(elapsed)} <span className="text-stage-muted">/ {formatTimestamp(maxSeconds)}</span>
             </p>
           </div>
-          <div className="h-24 text-rec" role="img" aria-label="Live microphone level">
+          <div className="h-24 text-accent-light" role="img" aria-label="Live microphone level">
             <Waveform peaks={padded} className="h-full w-full" />
           </div>
           <div className="flex flex-wrap items-center justify-between gap-4">
-            <button type="button" onClick={onStop} className={`${PRIMARY} bg-rec text-stage hover:bg-white`}>
-              <Square className="size-4 fill-current" aria-hidden />
+            <button type="button" onClick={onStop} className={SECONDARY}>
+              <Square className="size-4 fill-current text-rec" aria-hidden />
               Stop recording
             </button>
             <p className={`text-sm ${remaining <= 10 ? 'text-amber-light' : 'text-stage-muted'}`}>{remaining}s remaining</p>
@@ -113,7 +114,7 @@ export function RecordPanel({ snapshot, maxSeconds, onStart, onStop, onDiscard, 
             )}
           </div>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={onAnalyze} className={`${PRIMARY} bg-accent text-white hover:bg-accent-light hover:text-stage`}>
+            <button type="button" onClick={onAnalyze} className={PRIMARY}>
               Analyze recording
             </button>
             <button type="button" onClick={onStart} className={SECONDARY}>
@@ -139,7 +140,7 @@ export function RecordPanel({ snapshot, maxSeconds, onStart, onStop, onDiscard, 
           </div>
           <div className="flex flex-wrap gap-3">
             {error.code !== 'unsupported' && (
-              <button type="button" onClick={onStart} className={`${PRIMARY} bg-accent text-white hover:bg-accent-light hover:text-stage`}>
+              <button type="button" onClick={onStart} className={PRIMARY}>
                 <Mic className="size-4" aria-hidden />
                 Try again
               </button>

@@ -1,3 +1,4 @@
+import type { LanguageChoice } from './languages'
 import type { AnalysisReport, ModelsResponse, Stage, StageState } from './types'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api/v1'
@@ -13,6 +14,8 @@ export interface Limits {
   min_duration_seconds: number
   max_duration_seconds: number
   allowed_extensions: string[]
+  /** Absent on servers from before language selection. */
+  languages?: { code: string; name: string; scam_detection_validated: boolean | null }[]
 }
 
 export class ApiError extends Error {
@@ -66,9 +69,12 @@ export async function analyzeAudio(
   file: File,
   onStage: (stage: Stage, state: StageState) => void,
   signal?: AbortSignal,
+  language: LanguageChoice = 'auto',
 ): Promise<AnalysisReport> {
   const form = new FormData()
   form.append('file', file)
+  // Auto-detect sends nothing, which is exactly what clients did before language selection existed.
+  if (language !== 'auto') form.append('language', language)
   const response = await send('/analysis/stream', { method: 'POST', body: form, signal })
   if (!response.body) throw new ApiError('no_stream', 'The server did not return a readable response.')
 

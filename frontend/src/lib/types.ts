@@ -34,12 +34,40 @@ export interface TranscriptResult {
   status: 'ok' | 'no_speech' | 'unavailable'
   text: string
   language: string | null
+  /** The language-detection score, present only when the language was detected (never for a language you selected). */
   language_probability: number | null
+  /** 'translated': this is the speech-to-text model's English translation of the audio, not what was said. */
+  language_source?: 'detected' | 'selected' | 'translated' | null
+  detected_language?: string | null
+  detected_language_score?: number | null
+  language_mismatch?: boolean
   segments: TranscriptSegment[]
   quality_notes: string[]
   model: ModelInfo | null
   error: string | null
 }
+
+/** What language was asked for and used, and what is and is not known about it. Absent in reports from older servers. */
+export interface LanguageInfo {
+  requested: 'auto' | 'en' | 'hi'
+  code: string | null
+  name: string | null
+  source: 'detected' | 'selected' | 'unknown'
+  detection_score: number | null
+  detected_code: string | null
+  detected_name: string | null
+  detected_score: number | null
+  mismatch: boolean
+  scam_detection_supported: boolean | null
+  scam_detection_note: string | null
+  /** 'direct': the detectors read the transcript. 'translated': they read an English translation. Absent in older reports. */
+  scam_detection_mode?: ScamDetectionMode | null
+  translation_note?: string | null
+  transcription_note: string | null
+  voice_note: string
+}
+
+export type ScamDetectionMode = 'direct' | 'translated' | 'not_run'
 
 export type VoiceVerdict = 'model_favors_fake' | 'model_favors_real' | 'inconclusive' | 'unavailable'
 
@@ -47,6 +75,16 @@ export interface VoiceWindow {
   start_seconds: number
   end_seconds: number
   fake_score: number
+}
+
+/** One detector's own reading, present when more than one detector ran. Absent in older reports. */
+export interface VoiceDetectorResult {
+  model: ModelInfo
+  verdict: VoiceVerdict
+  fake_score_median: number | null
+  windows_analyzed: number
+  windows_favoring_fake: number
+  error: string | null
 }
 
 export interface VoiceAssessment {
@@ -63,6 +101,12 @@ export interface VoiceAssessment {
   limitations: string[]
   model: ModelInfo | null
   error: string | null
+  /** Every detector that ran. Empty or absent when one detector produced the result. */
+  detectors?: VoiceDetectorResult[]
+  /** "narrowband": phone or VoIP quality. Absent in older reports. */
+  audio_band?: 'full_band' | 'narrowband' | 'unknown' | null
+  /** The window score from which the result counts as leaning "fake". Absent in older reports, which used 0.5. */
+  fake_cutoff?: number | null
 }
 
 export type IntentRisk = 'none_detected' | 'weak_signals' | 'elevated' | 'high' | 'inconclusive' | 'unavailable'
@@ -82,6 +126,11 @@ export interface IntentIndicator {
   context: 'direct' | 'reported'
   detector: 'rules' | 'nli'
   score: number | null
+  /** Which text the offsets point into. Absent means the transcript, as in older reports. */
+  text_source?: 'transcript' | 'translation'
+  /** For a finding in the translation: the original-language transcript text spoken at the same time. */
+  original_text?: string | null
+  original_segment_index?: number | null
   trigger: string
   explanation: string
   suggested_action: string
@@ -98,6 +147,8 @@ export interface IntentAssessment {
   reported_mentions: number
   uncertain_mentions: number
   detector: 'rules' | 'nli'
+  /** 'translation': the detector read an English translation of non-English speech. Absent in older reports. */
+  analyzed_text?: 'transcript' | 'translation'
   score_note: string | null
   limitations: string[]
   method: ModelInfo | null
@@ -145,6 +196,9 @@ export interface AnalysisReport {
   intent: IntentAssessment
   recommendations: RecommendationPlan
   errors: ComponentError[]
+  language?: LanguageInfo | null
+  /** The English translation used for scam detection on Hindi or Urdu speech. Never replaces the transcript. */
+  translation?: TranscriptResult | null
   privacy: { audio_stored: boolean; transcript_stored: boolean }
   timings_seconds: Record<string, number>
   notice: string

@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.config import get_settings
 from app.services.audio_io import load_mono_16k
-from app.services.voice_authenticity import HfAudioClassifier
+from app.services.voice_authenticity import HfAudioClassifier, build_voice_classifier
 
 EXTENSIONS = {".wav", ".mp3", ".m4a", ".flac", ".ogg"}
 
@@ -29,7 +29,7 @@ def run(label: str, folder: Path, classifier: HfAudioClassifier) -> int:
 
 
 if __name__ == "__main__":
-    classifier = HfAudioClassifier(get_settings())
+    classifier = build_voice_classifier(get_settings())
     n = run("human", Path(sys.argv[1]), classifier) + run("synthetic", Path(sys.argv[2]), classifier)
     print(
         f"NOT AN EVALUATION: n={n} labeled files. Counts only, no accuracy is computed. Estimating accuracy needs hundreds of "

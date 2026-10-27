@@ -13,9 +13,9 @@ const picker = (selectedId: string, extra: Partial<Parameters<typeof ScenarioPic
   renderToStaticMarkup(<ScenarioPicker selectedId={selectedId} onSelect={noop} onAnalyze={noop} busy={false} blockedReason={null} {...extra} />)
 
 describe('ScenarioPicker', () => {
-  it('lists all six scenarios as one radio group and marks only the selected one', () => {
+  it('lists every scenario as one radio group and marks only the selected one', () => {
     const html = picker('payment')
-    expect((html.match(/type="radio"/g) ?? []).length).toBe(6)
+    expect((html.match(/type="radio"/g) ?? []).length).toBe(SCENARIOS.length)
     expect((html.match(/checked=""/g) ?? []).length).toBe(1)
     for (const s of SCENARIOS) expect(html).toContain(s.title)
   })

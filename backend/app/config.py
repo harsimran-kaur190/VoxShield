@@ -3,8 +3,16 @@ from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-DEFAULT_VOICE_MODEL_ID = "Gustking/wav2vec2-large-xlsr-deepfake-audio-classification"
-DEFAULT_VOICE_MODEL_REVISION = "f7050b586236dc910d1157f430def2d0647b02b4"
+# NII Yamagishi Lab AntiDeepfake, MMS-300M backbone (CC BY-NC-SA 4.0: non-commercial use only). Chosen over the earlier
+# Gustking ASVspoof-2019 model on VoxShield's English/Hindi/Punjabi benchmark: see backend/evaluation/VOICE_RESULTS.md.
+DEFAULT_VOICE_MODEL_ID = "nii-yamagishilab/mms-300m-anti-deepfake"
+DEFAULT_VOICE_MODEL_REVISION = "7928e119e09f616b2ce698892e00ca22dbaa40bf"
+# A second detector run on every recording (Apache-2.0). It counts only on full-band audio: there it never called a real
+# voice fake in VoxShield's benchmark, and it caught a TTSMaker voice the default model scored as real. Over Opus it
+# called 4 of 119 real voices fake and caught nothing extra, so on phone or VoIP audio it is shown but does not decide.
+# Empty disables it.
+DEFAULT_VOICE_SECONDARY_MODEL_ID = "Gustking/wav2vec2-large-xlsr-deepfake-audio-classification"
+DEFAULT_VOICE_SECONDARY_MODEL_REVISION = "f7050b586236dc910d1157f430def2d0647b02b4"
 DEFAULT_SCAM_MODEL_ID = "MoritzLaurer/deberta-v3-base-zeroshot-v2.0"
 DEFAULT_SCAM_MODEL_REVISION = "8e7e5af5983a0ddb1a5b45a38b129ab69e2258e8"
 
@@ -37,6 +45,8 @@ class Settings(BaseSettings):
 
     voice_model_id: str = DEFAULT_VOICE_MODEL_ID
     voice_model_revision: str | None = DEFAULT_VOICE_MODEL_REVISION
+    voice_secondary_model_id: str = DEFAULT_VOICE_SECONDARY_MODEL_ID
+    voice_secondary_model_revision: str | None = DEFAULT_VOICE_SECONDARY_MODEL_REVISION
     voice_device: str = "cpu"
     voice_window_seconds: float = 6
     voice_min_window_seconds: float = 2
@@ -46,6 +56,14 @@ class Settings(BaseSettings):
     voice_majority_ratio: float = 0.66
     voice_borderline_low: float = 0.4
     voice_borderline_high: float = 0.6
+    # Full-band (not phone-quality) audio: the primary model leans "fake" from this window score, with an inconclusive
+    # band of +/- voice_full_band_borderline. Chosen on half of VoxShield's benchmark and checked on the other half; see
+    # backend/evaluation/VOICE_RESULTS.md. Phone-quality audio keeps the 0.5 rule above. None disables the change.
+    voice_full_band_threshold: float | None = 0.2
+    voice_full_band_borderline: float = 0.1
+    # Audio counts as phone-quality when the band above 4 kHz barely rises with the speech, or is almost empty.
+    voice_narrowband_lift_db: float = 6.0
+    voice_narrowband_ratio_db: float = -60.0
 
     # Which scam-intent detector produces the findings: the transparent rules, or the zero-shot NLI model.
     scam_detector: Literal["rules", "nli"] = "nli"

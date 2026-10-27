@@ -46,8 +46,8 @@ describe('VOICE_READING', () => {
 
 describe('splitVoiceSummary', () => {
   it('moves only the exact known spot-check sentence out of the summary', () => {
-    const full = "The model's 'fake' label won in 3 of 3 windows. It did the same for some real recordings in VoxShield's spot check."
-    expect(splitVoiceSummary(full)).toEqual({ lead: "The model's 'fake' label won in 3 of 3 windows.", aside: "It did the same for some real recordings in VoxShield's spot check." })
+    const full = "The model's 'fake' label won in 3 of 3 windows. On phone-quality audio it did the same for a few real voices in VoxShield's benchmark."
+    expect(splitVoiceSummary(full)).toEqual({ lead: "The model's 'fake' label won in 3 of 3 windows.", aside: "On phone-quality audio it did the same for a few real voices in VoxShield's benchmark." })
   })
 
   it('returns any other summary whole, so wording is never lost', () => {

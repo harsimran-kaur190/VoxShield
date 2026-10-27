@@ -2,6 +2,7 @@ import { FileAudio, Upload } from 'lucide-react'
 import { useId, useRef, useState, type DragEvent } from 'react'
 
 import type { Limits } from '../lib/api'
+import { buttonClass } from './ui/styles'
 
 const TICKS = 72
 
@@ -73,7 +74,7 @@ export function UploadStage({ limits, onFile }: { limits: Limits | null; onFile:
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="mt-5 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white transition hover:bg-accent-light hover:text-stage"
+          className={buttonClass({ size: 'lg', className: 'mt-5' })}
         >
           <Upload className="size-4" aria-hidden />
           Choose audio file

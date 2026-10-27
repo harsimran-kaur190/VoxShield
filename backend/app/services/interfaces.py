@@ -9,7 +9,7 @@ Audio16k = NDArray[np.float32]
 
 
 class Transcriber(Protocol):
-    def transcribe(self, audio: Audio16k) -> TranscriptResult: ...
+    def transcribe(self, audio: Audio16k, language: str | None = None) -> TranscriptResult: ...
 
 
 class VoiceAuthenticityClassifier(Protocol):

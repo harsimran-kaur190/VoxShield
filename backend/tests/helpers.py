@@ -31,13 +31,42 @@ def transcript_of(text: str, language: str = "en") -> TranscriptResult:
 
 
 class FakeTranscriber:
-    def __init__(self, result: TranscriptResult | None = None, error: Exception | None = None):
+    def __init__(
+        self,
+        result: TranscriptResult | None = None,
+        error: Exception | None = None,
+        translation: TranscriptResult | None = None,
+        translate_error: Exception | None = None,
+    ):
         self.result, self.error = result, error
+        self.translation, self.translate_error = translation, translate_error
+        self.languages_requested: list[str | None] = []  # what the pipeline asked for, one entry per call
+        self.translations_requested: list[str | None] = []
 
-    def transcribe(self, audio):
+    def transcribe(self, audio, language=None):
+        self.languages_requested.append(language)
         if self.error:
             raise self.error
         return self.result
+
+    def translate(self, audio, language):
+        self.translations_requested.append(language)
+        if self.translate_error:
+            raise self.translate_error
+        if self.translation is None:
+            return TranscriptResult(status="no_speech", language="en", language_source="translated")
+        return self.translation
+
+
+def translation_of(text: str, start: float = 0, end: float = 5) -> TranscriptResult:
+    """A stand-in for Whisper's English translation of the audio."""
+    return TranscriptResult(
+        status="ok",
+        text=text,
+        language="en",
+        language_source="translated",
+        segments=[TranscriptSegment(index=0, start_seconds=start, end_seconds=end, text=text, char_start=0, char_end=len(text))],
+    )
 
 
 class FakeVoice:

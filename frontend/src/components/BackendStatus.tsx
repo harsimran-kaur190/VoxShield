@@ -1,9 +1,9 @@
 import type { BackendState } from '../hooks/useApi'
 
 const styles = {
-  checking: { dot: 'bg-amber-light animate-pulse', text: 'Connecting…' },
+  checking: { dot: 'bg-line-strong animate-pulse', text: 'Connecting…' },
   online: { dot: 'bg-ok', text: 'Server online' },
-  offline: { dot: 'bg-danger', text: 'Server offline' },
+  offline: { dot: 'bg-amber-light', text: 'Server offline' },
 } as const
 
 export function BackendStatus({ state }: { state: BackendState }) {

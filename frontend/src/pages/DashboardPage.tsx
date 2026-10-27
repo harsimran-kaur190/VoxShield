@@ -1,19 +1,23 @@
 import { Lock } from 'lucide-react'
+import { useState } from 'react'
 
-import { AnalysesIntro } from '../components/AnalysesIntro'
 import { AnalysisView } from '../components/AnalysisView'
 import { BackendStatus } from '../components/BackendStatus'
 import { ErrorNotice } from '../components/ErrorNotice'
 import { ResultsView } from '../components/results/ResultsView'
 import { InputStage } from '../components/InputStage'
-import { useAnalysis } from '../hooks/useAnalysis'
+import { useAnalysis, useStartOverOnRenavigation } from '../hooks/useAnalysis'
 import { useBackend } from '../hooks/useApi'
+import { DEFAULT_LANGUAGE, type LanguageChoice } from '../lib/languages'
 
 export function DashboardPage() {
   const backend = useBackend()
   const limits = backend.status === 'online' ? backend.limits : null
   const { state, start, retry, reset } = useAnalysis(limits)
-  if (state.phase === 'done') return <ResultsView report={state.report} waveform={state.waveform} audio={state.audio} onReset={reset} onRetry={retry} />
+  useStartOverOnRenavigation(state.phase, reset)
+  // Kept here, not in the form, so the choice survives an analysis, an error, and "Analyze another".
+  const [language, setLanguage] = useState<LanguageChoice>(DEFAULT_LANGUAGE)
+  if (state.phase === 'done') return <ResultsView report={state.report} waveform={state.waveform} audio={state.audio} entryId={state.entryId} onReset={reset} onRetry={retry} />
   if (state.phase === 'running') {
     return <AnalysisView {...state} onCancel={reset} />
   }
@@ -29,15 +33,13 @@ export function DashboardPage() {
             Beyond the Voice.
             <span className="block italic text-accent">Into the Truth.</span>
           </h1>
-          <p className="mt-6 max-w-lg text-lg text-ink-2">
-            Upload a call recording, or record one with your microphone. VoxShield checks whether the voice looks synthetic and quotes the phrases in the conversation that look like a scam.
-          </p>
+          <p className="mt-6 max-w-lg text-lg text-ink-2">Upload or record a call. VoxShield quotes the phrases that look like a scam, and separately checks whether the voice looks synthetic.</p>
           <p className="mt-6 flex max-w-lg items-start gap-2 text-sm text-ink-3">
             <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
-            Audio is written to temporary files while it is analyzed and deleted when the analysis ends. Audio and transcripts are not kept.
+            The server deletes the audio when the analysis ends and keeps no audio or transcript.
           </p>
           {backend.status === 'offline' && (
-            <p role="alert" className="mt-4 text-sm text-danger">
+            <p role="alert" className="mt-4 text-sm text-amber">
               The backend is not reachable. Start it with the commands in the README, then reload this page.
             </p>
           )}
@@ -52,10 +54,9 @@ export function DashboardPage() {
               dismissLabel="Dismiss"
             />
           )}
-          <InputStage limits={limits} onFile={start} />
+          <InputStage limits={limits} onFile={(file) => start(file, language)} language={language} onLanguageChange={setLanguage} />
         </div>
       </section>
-      <AnalysesIntro />
     </div>
   )
 }

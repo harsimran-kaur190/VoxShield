@@ -1,14 +1,17 @@
 import { usePlayback, usePlaybackState } from '../../hooks/usePlayback'
 import { formatTimestamp } from '../../lib/highlight'
-import { FAKE_SCORE_NAME, formatFakeScore, scaleOffset, splitVoiceSummary, VOICE_READING } from '../../lib/score'
-import type { VoiceAssessment } from '../../lib/types'
+import { AUDIO_BAND_LABEL, detectorName, FAKE_SCORE_NAME, fakeCutoffPercent, formatFakeScore, scaleOffset, splitVoiceSummary, VOICE_READING } from '../../lib/score'
+import { VOICE_LANGUAGE_NOTE } from '../../lib/languages'
+import type { LanguageInfo, VoiceAssessment } from '../../lib/types'
+import { VOICE_VIEW } from '../../lib/views'
 import { Limitations, ModelNote } from '../ModelNote'
 
-export function VoiceSection({ voice }: { voice: VoiceAssessment }) {
+export function VoiceSection({ voice, language }: { voice: VoiceAssessment; language?: LanguageInfo | null }) {
   const controller = usePlayback()
   const playback = usePlaybackState()
   const scored = voice.windows.length > 0 && voice.fake_score_median !== null
   const { lead, aside } = splitVoiceSummary(voice.summary)
+  const detectors = voice.detectors ?? []
   return (
     <section aria-labelledby="voice-heading">
       <p className="font-mono text-sm text-accent">02 · Voice authenticity · from the audio</p>
@@ -17,7 +20,18 @@ export function VoiceSection({ voice }: { voice: VoiceAssessment }) {
       </h2>
       <p className="mt-3 text-ink-2">{lead}</p>
       <p className="mt-2 text-ink-2">{VOICE_READING[voice.verdict]}</p>
-      {voice.error && <p className="mt-2 text-danger">{voice.error}</p>}
+      {detectors.length > 1 && (
+        <ul aria-label="Each detector's own result" className="mt-3 space-y-1 text-sm text-ink-2" data-testid="voice-detectors">
+          {detectors.map((d) => (
+            <li key={d.model.name}>
+              <span className="font-medium text-ink">{detectorName(d.model.name)}:</span> {VOICE_VIEW[d.verdict].label}
+              {d.fake_score_median !== null && <span className="font-mono text-xs text-ink-3"> · median {formatFakeScore(d.fake_score_median)}</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+      {voice.error && <p className="mt-2 text-amber">{voice.error}</p>}
+      {language?.code && language.code !== 'en' && <p className="mt-2 text-sm text-ink-3">{VOICE_LANGUAGE_NOTE}</p>}
 
       {scored && voice.fake_score_median !== null && (
         <div className="mt-6">
@@ -26,7 +40,7 @@ export function VoiceSection({ voice }: { voice: VoiceAssessment }) {
             <p className="pb-1 text-sm text-ink-2">
               median {FAKE_SCORE_NAME}, not a probability
               <br />
-              {voice.windows_analyzed} window{voice.windows_analyzed === 1 ? '' : 's'} analyzed · {voice.windows_favoring_fake} at or above 50%
+              {voice.windows_analyzed} window{voice.windows_analyzed === 1 ? '' : 's'} analyzed · {voice.windows_favoring_fake} at or above {fakeCutoffPercent(voice.fake_cutoff)}
             </p>
           </div>
 
@@ -99,6 +113,8 @@ export function VoiceSection({ voice }: { voice: VoiceAssessment }) {
           <p className="mt-3 text-ink-2">
             The percentage is a normalized model output, shown this way for display only. It is not calibrated and not the chance that the voice is fake. The classifier returns a score and does not say which sounds or features led to it, so this page cannot explain why. It detected a voice-related signal, nothing more specific.
           </p>
+          {voice.audio_band && <p className="mt-2 text-ink-2">Audio quality: {AUDIO_BAND_LABEL[voice.audio_band]}.</p>}
+          {language?.voice_note && <p className="mt-2 text-ink-2">{language.voice_note}</p>}
           {voice.score_note && <p className="mt-2 text-ink-2">{voice.score_note}</p>}
           {voice.decision_rule && <p className="mt-2 text-ink-2">{voice.decision_rule}</p>}
           {(aside || voice.reliability_caution) && (

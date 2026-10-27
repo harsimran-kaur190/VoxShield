@@ -5,12 +5,19 @@ import { analyzeScenario, loadScenarioFile, SAMPLE_LABEL, SampleLoadError, SCENA
 const audio = (body = 'abc', type = 'audio/flac', status = 200) => new Response(body, { status, headers: { 'content-type': type } })
 
 describe('scenario definitions', () => {
-  it('offers the six required situations, each with a unique id and its own audio file', () => {
-    expect(SCENARIOS.map((s) => s.id)).toEqual(['protective', 'otp', 'payment', 'discourage', 'harmless', 'ambiguous'])
-    expect(new Set(SCENARIOS.map((s) => s.audioUrl)).size).toBe(6)
+  it('offers the six English situations and two Hindi ones, each with a unique id and its own audio file', () => {
+    expect(SCENARIOS.map((s) => s.id)).toEqual(['protective', 'otp', 'payment', 'discourage', 'harmless', 'ambiguous', 'hi-otp', 'hi-protective'])
+    expect(new Set(SCENARIOS.map((s) => s.audioUrl)).size).toBe(8)
     for (const s of SCENARIOS) {
       expect(s.title && s.testing && s.lookFor && s.script).toBeTruthy()
-      expect(s.audioUrl).toMatch(/^\/lab\/[a-z]+\.flac$/)
+      expect(s.audioUrl).toMatch(/^\/lab\/[a-z-]+\.flac$/)
+    }
+  })
+
+  it('sends each Hindi sample as Hindi, and its script is in Devanagari', () => {
+    for (const s of SCENARIOS.filter((item) => item.id.startsWith('hi-'))) {
+      expect(s.language).toBe('hi')
+      expect(s.script).toMatch(/[\u0900-\u097F]/)
     }
   })
 
@@ -63,7 +70,7 @@ describe('analyzeScenario', () => {
     await analyzeScenario(SCENARIOS[2], start, load)
     expect(load).toHaveBeenCalledWith(SCENARIOS[2])
     expect(start).toHaveBeenCalledTimes(1)
-    expect(start).toHaveBeenCalledWith(file)
+    expect(start).toHaveBeenCalledWith(file, 'en') // the sample's own language is sent, not left to detection
   })
 
   it('does not start an analysis when the sample cannot be loaded', async () => {

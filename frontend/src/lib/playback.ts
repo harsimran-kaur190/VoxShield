@@ -37,7 +37,8 @@ export interface FindingGroup {
 export function groupFindings(indicators: IntentIndicator[]): FindingGroup[] {
   const byPassage = new Map<string, IntentIndicator[]>()
   for (const item of indicators) {
-    const passage = `${item.char_start}:${item.char_end}`
+    // Offsets into the transcript and into its translation are different texts, so they never share a passage.
+    const passage = `${item.text_source ?? 'transcript'}:${item.char_start}:${item.char_end}`
     byPassage.set(passage, [...(byPassage.get(passage) ?? []), item])
   }
   const groups = [...byPassage.values()].map((items): FindingGroup => {

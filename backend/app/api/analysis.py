@@ -3,7 +3,7 @@ import threading
 from collections.abc import Iterator
 from typing import Any
 
-from fastapi import APIRouter, Depends, UploadFile
+from fastapi import APIRouter, Depends, Form, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 from starlette.background import BackgroundTask
@@ -13,6 +13,7 @@ from app.dependencies import get_pipeline
 from app.errors import UploadError
 from app.schemas import ErrorBody
 from app.schemas_analysis import AnalysisReport
+from app.services.languages import UnsupportedLanguage, parse_requested_language
 from app.services.pipeline import AnalysisPipeline
 from app.services.upload_handling import save_and_validate
 
@@ -41,6 +42,14 @@ def _admit() -> threading.BoundedSemaphore:
     return slots
 
 
+def _requested_language(value: str | None) -> str:
+    """Checked before anything is read or stored, so a bad value costs nothing. A missing value means auto-detect."""
+    try:
+        return parse_requested_language(value)
+    except UnsupportedLanguage as error:
+        raise UploadError(422, "unsupported_language", str(error)) from error
+
+
 def _final_report(events: Iterator[dict[str, Any]]) -> AnalysisReport:
     report = None
     for event in events:
@@ -51,8 +60,9 @@ def _final_report(events: Iterator[dict[str, Any]]) -> AnalysisReport:
 
 
 @router.post("", response_model=AnalysisReport, responses=ERROR_RESPONSES)
-async def analyze(file: UploadFile, pipeline: AnalysisPipeline = Depends(get_pipeline)) -> AnalysisReport:
+async def analyze(file: UploadFile, language: str | None = Form(default=None), pipeline: AnalysisPipeline = Depends(get_pipeline)) -> AnalysisReport:
     """Validate, transcribe, and assess an audio file. Returns one JSON report when everything is done."""
+    requested = _requested_language(language)
     slots = _admit()
     try:
         workdir, path, audio = await save_and_validate(file, get_settings())
@@ -60,15 +70,16 @@ async def analyze(file: UploadFile, pipeline: AnalysisPipeline = Depends(get_pip
         slots.release()
         raise
     try:
-        return await run_in_threadpool(lambda: _final_report(pipeline.run(path, audio)))
+        return await run_in_threadpool(lambda: _final_report(pipeline.run(path, audio, requested)))
     finally:
         workdir.cleanup()
         slots.release()
 
 
 @router.post("/stream", responses={200: {"content": {"application/x-ndjson": {}}}, **ERROR_RESPONSES})
-async def analyze_stream(file: UploadFile, pipeline: AnalysisPipeline = Depends(get_pipeline)) -> StreamingResponse:
+async def analyze_stream(file: UploadFile, language: str | None = Form(default=None), pipeline: AnalysisPipeline = Depends(get_pipeline)) -> StreamingResponse:
     """Same analysis, streamed as newline-delimited JSON: stage events, then one final report event."""
+    requested = _requested_language(language)
     slots = _admit()
     try:
         workdir, path, audio = await save_and_validate(file, get_settings())
@@ -85,7 +96,7 @@ async def analyze_stream(file: UploadFile, pipeline: AnalysisPipeline = Depends(
 
     def lines() -> Iterator[str]:
         try:
-            for event in pipeline.run(path, audio):
+            for event in pipeline.run(path, audio, requested):
                 if event["type"] == "report":
                     yield json.dumps({"type": "report", "report": json.loads(event["report"].model_dump_json())}) + "\n"
                 else:

@@ -1,0 +1,2243 @@
+{
+ "model": "MelodyMachine/Deepfake-audio-detection-V2",
+ "groups": {
+  "en/mms-tts": {
+   "real_n": 39,
+   "fake_n": 38,
+   "real_called_fake": 0.41025641025641024,
+   "real_called_real": 0.5128205128205128,
+   "fake_called_fake": 0.05263157894736842,
+   "fake_called_real": 0.9473684210526315,
+   "auc": 0.238,
+   "eer": 0.947,
+   "median_real": 0.008,
+   "median_fake": 0.0
+  },
+  "en/macos-say": {
+   "real_n": 39,
+   "fake_n": 14,
+   "real_called_fake": 0.41025641025641024,
+   "real_called_real": 0.5128205128205128,
+   "fake_called_fake": 0.07142857142857142,
+   "fake_called_real": 0.9285714285714286,
+   "auc": 0.25,
+   "eer": 0.929,
+   "median_real": 0.008,
+   "median_fake": 0.0
+  },
+  "hi/mms-tts": {
+   "real_n": 40,
+   "fake_n": 39,
+   "real_called_fake": 0.05,
+   "real_called_real": 0.925,
+   "fake_called_fake": 0.0,
+   "fake_called_real": 1.0,
+   "auc": 0.438,
+   "eer": 1.0,
+   "median_real": 0.0,
+   "median_fake": 0.0
+  },
+  "hi/macos-say": {
+   "real_n": 40,
+   "fake_n": 15,
+   "real_called_fake": 0.05,
+   "real_called_real": 0.925,
+   "fake_called_fake": 0.06666666666666667,
+   "fake_called_real": 0.8666666666666667,
+   "auc": 0.564,
+   "eer": 0.733,
+   "median_real": 0.0,
+   "median_fake": 0.0
+  },
+  "pa/mms-tts": {
+   "real_n": 40,
+   "fake_n": 39,
+   "real_called_fake": 0.5,
+   "real_called_real": 0.425,
+   "fake_called_fake": 0.0,
+   "fake_called_real": 1.0,
+   "auc": 0.05,
+   "eer": 1.0,
+   "median_real": 0.743,
+   "median_fake": 0.0
+  }
+ },
+ "clips": [
+  {
+   "path": "10010138729160973689.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10035998729701048400.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "1009709090964908274.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10098964113747380446.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "10146705666908229607.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "10238777279729691182.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "10280794863324544626.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10290896634244679159.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "10305808618795196942.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10312254140358477897.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 0.9971
+  },
+  {
+   "path": "10354232920158081925.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10408474834696432538.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "10416083819753348102.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "10461636001046553742.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10486393012874569877.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10493474598526206030.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10511964668971448587.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10567709020684252271.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "inconclusive",
+   "median": 0.5
+  },
+  {
+   "path": "10597813815011301513.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10603285326592464876.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "10606824155904794190.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "inconclusive",
+   "median": 0.5
+  },
+  {
+   "path": "10630374883688952860.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0009
+  },
+  {
+   "path": "10749355711908235873.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "10796058897134434902.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10805693277239677928.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "10807778671969097912.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10846227846460802233.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "inconclusive",
+   "median": null
+  },
+  {
+   "path": "10885549230041454053.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10927605878527486298.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 0.9048
+  },
+  {
+   "path": "11030046932175288954.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "1105184381995491301.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0001
+  },
+  {
+   "path": "11119334765887977448.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "11207448774577367011.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 0.9962
+  },
+  {
+   "path": "11245104609011485282.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0049
+  },
+  {
+   "path": "11247703749960901557.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "inconclusive",
+   "median": 0.503
+  },
+  {
+   "path": "11299064872096119812.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "11437006947329980503.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "11527336559557410281.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "11607118204495423532.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0076
+  },
+  {
+   "path": "11667832843141994163.wav",
+   "lang": "en",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_00.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_01.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_02.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "mms_en_03.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "inconclusive",
+   "median": null
+  },
+  {
+   "path": "mms_en_04.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_05.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_06.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_07.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_08.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_09.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_10.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_11.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_12.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_13.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_14.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "mms_en_15.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_16.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_17.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_18.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_19.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_20.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_21.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_22.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_23.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_24.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_25.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_26.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_27.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_28.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_29.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_30.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "inconclusive",
+   "median": null
+  },
+  {
+   "path": "mms_en_31.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_32.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_33.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_34.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_35.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_36.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_37.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_38.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_en_39.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_en_Samantha_00.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_en_Daniel_01.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_en_Karen_02.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_en_Moira_03.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "inconclusive",
+   "median": null
+  },
+  {
+   "path": "mac_en_Rishi_04.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "inconclusive",
+   "median": null
+  },
+  {
+   "path": "mac_en_Tara_05.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_en_Aman_06.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_en_Fred_07.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_en_Samantha_08.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_en_Daniel_09.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_en_Karen_10.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_en_Moira_11.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_en_Rishi_12.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "mac_en_Tara_13.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_en_Aman_14.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_en_Fred_15.wav",
+   "lang": "en",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10003386135529782184.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10028896103651079035.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "10096022508053277080.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10211077472389368581.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10267477486953643935.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10322493392875105700.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10423652248495413645.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10429326314841370948.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "1044599921269916195.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10453806420280704597.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10691214664103820058.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10769152509110502346.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10905105795491986941.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10962458667180447866.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "11067967481224708206.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "11106558216578129562.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0003
+  },
+  {
+   "path": "11122003558125069661.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "11185860415976851113.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "11206833549725473331.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "11319373802838018668.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "11416316648423711293.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "11625356119871723360.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "11633347711483585417.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "11636485706819037033.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "11745082786885157257.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "11867223640312846075.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "11928694783044265456.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "11955664484384129932.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "12038523408717497365.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "12040070323669249358.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "12048117969720983047.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "12279724329535836626.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "12409483654617280591.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "12421193312741550985.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "inconclusive",
+   "median": 0.5016
+  },
+  {
+   "path": "12472250695287141648.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "12556155672166179839.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "126305394963927730.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0081
+  },
+  {
+   "path": "12853086516705941187.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "12857528874826028508.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "12888270866141269240.wav",
+   "lang": "hi",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_00.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_01.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_02.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_03.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "inconclusive",
+   "median": null
+  },
+  {
+   "path": "mms_hi_04.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_05.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_06.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_07.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_08.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_09.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_10.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_11.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_12.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_13.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_14.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_15.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_16.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_17.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_18.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_19.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_20.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_21.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_22.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_23.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_24.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_25.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_26.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_27.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_28.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_29.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_30.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_31.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_32.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_33.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_34.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_35.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_36.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_37.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_38.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_hi_39.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_hi_Lekha_00.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0001
+  },
+  {
+   "path": "mac_hi_Lekha_01.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_hi_Lekha_02.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "mac_hi_Lekha_03.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "inconclusive",
+   "median": null
+  },
+  {
+   "path": "mac_hi_Lekha_04.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_hi_Lekha_05.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_hi_Lekha_06.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_hi_Lekha_07.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "inconclusive",
+   "median": 0.5
+  },
+  {
+   "path": "mac_hi_Lekha_08.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_hi_Lekha_09.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_hi_Lekha_10.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_hi_Lekha_11.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_hi_Lekha_12.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_hi_Lekha_13.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mac_hi_Lekha_14.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0001
+  },
+  {
+   "path": "mac_hi_Lekha_15.wav",
+   "lang": "hi",
+   "label": "fake",
+   "source": "macos-say",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10039386502091710584.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "10054909099469272144.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "10145536708488987509.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.035
+  },
+  {
+   "path": "1019240085669127921.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0067
+  },
+  {
+   "path": "10213051987084598871.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.1187
+  },
+  {
+   "path": "10223518116097607744.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "inconclusive",
+   "median": 0.6484
+  },
+  {
+   "path": "1024701938837467713.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0021
+  },
+  {
+   "path": "10359776447359408898.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "10392541761966414375.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "10484629360468977832.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0187
+  },
+  {
+   "path": "10569903305900041290.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "1062083696989019802.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 0.8382
+  },
+  {
+   "path": "10652863023970204355.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0009
+  },
+  {
+   "path": "10739586791243609751.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10750443775503467985.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 0.9176
+  },
+  {
+   "path": "10765604799648673141.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0001
+  },
+  {
+   "path": "10809065901381690535.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10809870632761716259.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "10869550760638794715.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 0.9964
+  },
+  {
+   "path": "10883847515315417454.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "10906188808176381348.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "10952403456788195466.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "inconclusive",
+   "median": 0.541
+  },
+  {
+   "path": "11047140176840145736.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0001
+  },
+  {
+   "path": "11184508563133634043.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 0.9584
+  },
+  {
+   "path": "11211984262027352008.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0036
+  },
+  {
+   "path": "11218397018962677416.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "11364449980793617560.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "11379237650265844262.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.006
+  },
+  {
+   "path": "11687333694481263192.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 0.9737
+  },
+  {
+   "path": "11800557546013322062.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0574
+  },
+  {
+   "path": "11881355018613059758.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0018
+  },
+  {
+   "path": "11903247540507838971.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "inconclusive",
+   "median": 0.4955
+  },
+  {
+   "path": "11940316000590126069.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "1208323158152653506.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 0.9798
+  },
+  {
+   "path": "12132312812012690103.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "12189894895657149960.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "1222413829207828759.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "12305357075091892659.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0017
+  },
+  {
+   "path": "12422780726444390075.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "125749201806908768.wav",
+   "lang": "pa",
+   "label": "real",
+   "source": "fleurs",
+   "verdict": "model_favors_fake",
+   "median": 1.0
+  },
+  {
+   "path": "mms_pa_00.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_01.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_02.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_03.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_04.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_05.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_06.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_07.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_08.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_09.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_10.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_11.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_12.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_13.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_14.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_15.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_16.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_17.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_18.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_19.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_20.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_21.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_22.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_23.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_24.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_25.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_26.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_27.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_28.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_29.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_30.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_31.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_32.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_33.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_34.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "inconclusive",
+   "median": null
+  },
+  {
+   "path": "mms_pa_35.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_36.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_37.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_38.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  },
+  {
+   "path": "mms_pa_39.wav",
+   "lang": "pa",
+   "label": "fake",
+   "source": "mms-tts",
+   "verdict": "model_favors_real",
+   "median": 0.0
+  }
+ ]
+}

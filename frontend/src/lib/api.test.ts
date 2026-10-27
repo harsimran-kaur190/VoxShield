@@ -67,4 +67,31 @@ describe('analyzeAudio', () => {
     expect(sent.name).toBe('recording-20261025-090807.wav')
     expect(sent.type).toBe('audio/wav')
   })
+
+  describe('language', () => {
+    const sentForm = async (language?: 'auto' | 'en' | 'hi') => {
+      const fetchMock = vi.fn().mockResolvedValue(streamOf([JSON.stringify({ type: 'report', report }) + '\n']))
+      vi.stubGlobal('fetch', fetchMock)
+      await (language === undefined ? analyzeAudio(file, () => {}) : analyzeAudio(file, () => {}, undefined, language))
+      return fetchMock.mock.calls[0][1].body as FormData
+    }
+
+    it('sends nothing when the language is not chosen, exactly as clients did before language selection', async () => {
+      expect((await sentForm()).has('language')).toBe(false)
+      expect((await sentForm('auto')).has('language')).toBe(false)
+    })
+
+    it.each(['en', 'hi'] as const)('sends the chosen language code %s with the audio', async (code) => {
+      const form = await sentForm(code)
+      expect(form.get('language')).toBe(code)
+      expect((form.get('file') as File).name).toBe('a.wav')
+    })
+
+    it('surfaces the server message when a language is rejected', async () => {
+      const rejected = new Response(JSON.stringify({ detail: { code: 'unsupported_language', message: 'Unsupported language. Choose one of: auto, en, hi, pa.' } }), { status: 422 })
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(rejected))
+      await expect(analyzeAudio(file, () => {}, undefined, 'hi')).rejects.toMatchObject({ code: 'unsupported_language', message: expect.stringContaining('auto, en, hi, pa') })
+    })
+  })
 })
+

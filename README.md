@@ -23,7 +23,7 @@ Upload a call recording and VoxShield runs two independent assessments. Nothing 
 | Assessment | Method | Model |
 | --- | --- | --- |
 | Transcript | Speech-to-text with voice-activity filtering | `Systran/faster-whisper-small` (Whisper, MIT) |
-| Voice authenticity | Windowed wav2vec2 audio classifier; reports the model's raw "fake" score | `Gustking/wav2vec2-large-xlsr-deepfake-audio-classification` (Apache-2.0), pinned to a fixed revision |
+| Voice authenticity | Windowed wav2vec2 audio classifier; reports the model's raw "fake" score | `nii-yamagishilab/mms-300m-anti-deepfake` (**CC BY-NC-SA 4.0, non-commercial**), pinned to a fixed revision |
 | Scam intent | Zero-shot language model applied sentence by sentence (default), or transparent English rules (`VOXSHIELD_SCAM_DETECTOR=rules`). Every finding quotes the exact transcript sentence | `MoritzLaurer/deberta-v3-base-zeroshot-v2.0` (MIT), pinned to a fixed revision; or `voxshield-scam-rules` v1.1 (no ML model) |
 
 The two results are never merged into one score. Outcomes can be *inconclusive* or *unavailable*.
@@ -132,13 +132,13 @@ Stubbed model tests check wiring and decision logic only. `tests/data/intent_cas
 | --- | --- | --- |
 | GET | `/api/v1/health` | Liveness and version |
 | GET | `/api/v1/ready` | 200 once every model is loaded, otherwise 503 |
-| GET | `/api/v1/limits` | Upload limits and allowed extensions |
+| GET | `/api/v1/limits` | Upload limits, allowed extensions, and the selectable languages (with how scam detection treats each, and whether it is validated) |
 | GET | `/api/v1/models` | Model IDs, revisions, licenses, and whether each is loaded |
 | POST | `/api/v1/uploads/validate` | Validate a file and return metadata only |
-| POST | `/api/v1/analysis` | Full analysis, one JSON report |
-| POST | `/api/v1/analysis/stream` | Same analysis as newline-delimited JSON: stage events, then the report |
+| POST | `/api/v1/analysis` | Full analysis, one JSON report. Optional form field `language`: `auto` (default), `en`, or `hi`. Hindi and Urdu reports also carry a `translation` |
+| POST | `/api/v1/analysis/stream` | Same analysis as newline-delimited JSON: stage events, then the report. Same optional `language` field |
 
-Upload errors return `{"detail": {"code": "...", "message": "..."}}` with status 413, 415, 422, 429 (rate limited, with `Retry-After`), or 503 (busy). Component failures do not fail the request. They appear in the report as `status: "partial"` with an `errors` list.
+A request that omits `language` behaves as `auto`, so existing clients are unaffected. Any other value is rejected with `422` and code `unsupported_language`, before the file is read or stored. Upload errors return `{"detail": {"code": "...", "message": "..."}}` with status 413, 415, 422, 429 (rate limited, with `Retry-After`), or 503 (busy). Component failures do not fail the request. They appear in the report as `status: "partial"` with an `errors` list.
 
 ## Configuration
 
@@ -146,7 +146,48 @@ See `backend/.env.example`. Common settings: `VOXSHIELD_WHISPER_MODEL_SIZE` (`ba
 
 ## Scam Scenario Lab
 
-`/lab` offers six short situations (a protective notice, a verification-code request, an urgent payment request, a caller discouraging verification, a harmless message in a synthetic voice, and an ambiguous bank notice). Each is a script read by a computer-generated voice and saved as a small FLAC file in `frontend/public/lab/` (about 1.3 MB in total). They are labelled as synthetic samples, not real calls, and the scripts are labelled as scripts. Choosing "Analyze this sample" sends the audio through the same `/analysis/stream` endpoint and results page as an uploaded file, so every finding, score, and recommendation comes from the backend. The scenario text only says what is being tested and what to look at, never what will be found. A closing panel lists what that result can and cannot show, chosen from the report that came back. "Use your own recording instead" returns to the normal upload page. The samples do not measure accuracy: they show how the checks behave on situations the authors thought of. To regenerate them on macOS, use `say -v Samantha` with the script text in `frontend/src/lib/scenarios.ts` and `afconvert -f flac -d flac@16000 -c 1`.
+`/lab` offers six short English situations (a protective notice, a verification-code request, an urgent payment request, a caller discouraging verification, a harmless message in a synthetic voice, and an ambiguous bank notice) and two Hindi ones (a one-time-password request and a protective notice). Each is a script read by a computer-generated voice and saved as a small FLAC file in `frontend/public/lab/` (about 1.9 MB in total). They are labelled as synthetic samples, not real calls, and the scripts are labelled as scripts. Choosing "Analyze this sample" sends the audio through the same `/analysis/stream` endpoint and results page as an uploaded file, so every finding, score, and recommendation comes from the backend. The scenario text only says what is being tested and what to look at, never what will be found. A closing panel lists what that result can and cannot show, chosen from the report that came back. "Use your own recording instead" returns to the normal upload page. The samples do not measure accuracy: they show how the checks behave on situations the authors thought of. To regenerate them on macOS, use `say -v Samantha` (English) or `say -v Lekha` (Hindi) with the script text in `frontend/src/lib/scenarios.ts` and `afconvert -f flac -d flac@16000 -c 1`.
+
+## Voice authenticity: benchmark and model choice
+
+The voice check was measured on 272 clips in English, Hindi and Punjabi: real read speech from FLEURS, and the same
+sentences spoken by MMS neural text-to-speech and macOS voices, both clean and through a simulated phone channel.
+Full method, tables and caveats: [`backend/evaluation/VOICE_RESULTS.md`](backend/evaluation/VOICE_RESULTS.md).
+
+| Model | Real voice called fake (clean / phone) | Neural voice caught, clean (en / hi / pa) | Neural voice caught, phone (en / hi / pa) |
+| --- | --- | --- | --- |
+| Gustking wav2vec2-XLSR (previous default, Apache-2.0) | 0% / 0% | 24% / 3% / 3% | 0% / 0% / 0% |
+| **NII MMS-300M AntiDeepfake (default, non-commercial)** | 0% / 3–8% | 92% / 62% / 8% | 8% / 49% / 3% |
+
+Both caught every macOS voice on clean audio. The benchmark also found a bug: quietly recorded speech was skipped as
+silence, so most English real clips got no voice result at all. Silence is now judged relative to the recording's own
+level. None of this is real phone calls or commercial voice cloning, and FLEURS is in the NII model's training data.
+
+## Languages
+
+The Analyze page has a **Spoken language** selector: Auto-detect, English, or Hindi. Punjabi is not supported. What each part does, and what it does not:
+
+- **Transcription.** The multilingual `faster-whisper-small` model is asked for the chosen language (Whisper codes `en`, `hi`), or detects it in auto mode. The transcript is always in the language that was spoken (Devanagari for Hindi).
+- **Language metadata.** Every report has a `language` block: what was asked for, what was used, whether it was *detected* or *selected*, the detection score, and `scam_detection_mode` (`direct`, `translated`, or `not_run`). A score is returned **only for detected languages**. When you select a language, Whisper reports a probability of 1 that is not a measurement, so none is shown.
+- **Wrong selection is caught.** In manual mode the same model also guesses the language of the audio (one extra pass, no extra model). If the guess disagrees with your selection with a score of 0.7 or more (a heuristic), the report says so and shows no scam result. Without this check, forcing English onto Hindi speech makes Whisper write an English rendering of it, which the English scam detector would then analyze as if it had been said.
+- **English scam detection** reads the transcript directly, as before.
+- **Hindi and Urdu scam detection** runs through two sources, and each finding says which one it came from:
+  1. *Translation.* Whisper's own `task="translate"` pass makes an English translation **from the audio** (same model, nothing new to download, about 1.4 s for an 11 s clip). The configured English detector (language model or rules) reads that translation. Each finding points into the translation and carries the original-language sentence spoken at the same time (`original_text`, matched by timestamp), so you can compare what was flagged with what was said.
+  2. *Keyword rules.* `voxshield-indic-keyword-rules` 1.1 (`backend/app/services/scam_rules_indic.py`) reads the original transcript for the clearest requests in Devanagari and common romanized spellings: codes/OTP/PIN/password, money transfers, gift cards and crypto, remote-access apps, arrest and account-block threats, urgency, secrecy, discouraging the bank or police, and claimed bank or police identity. Hindi puts the verb last, so a request is a sensitive word followed within a few words by an imperative verb. A negation before that verb ("मत बताइए") marks the clause as advice and the match is set aside; "don't tell anyone" in a sentence that mentions a code without asking for one is also treated as advice. The rules include the forms Whisper writes when it mishears OTP ("अव तीपी", "और तीपी"). They are a backstop for requests the translation loses, and the translation covers the words the keyword list does not know.
+
+  The risk level is computed from both with the same rule as English. If the translation fails and the keyword rules find nothing, the result is *inconclusive*, not quiet. The translation is returned in the report as `translation`, shown in its own panel under the transcript, and never replaces the transcript. Urdu is included because Hindi speech is often auto-detected as Urdu; the keyword rules do not cover Urdu script.
+- **Other languages, Punjabi included,** get a transcript and *Limited language support*: "Scam detection is not validated for this language". That is neither a warning nor a clearance, and no scam verdict, finding or scam-specific advice is given.
+- **Voice authenticity is separate from language.** The same audio model runs for every language. On VoxShield's read-speech benchmark it caught neural voices in 92% of English and 62% of Hindi clips (see below), and the report says it is weaker outside English.
+- **Not validated.** Nothing about Hindi accuracy has been measured: not Whisper's transcription, not its translation, and not either detector. Whisper-small is expected to make many more mistakes than in English (on the Lab's Hindi samples it wrote "बंक" for बैंक and "अव तीपी" for ओटीपी, and translated खाता, account, as "food"). A mistranslation can add or hide a finding. Every Hindi result says it was checked through an unvalidated machine translation.
+- **What was tested.** Stand-in tests cover the wiring, the keyword rules (Devanagari, romanized text, negated advice, reported speech), merging, and failure handling (`backend/tests/test_languages.py`, `backend/tests/test_multilingual_intent.py`). With the real models, spoken Hindi (computer-generated, macOS "Lekha" voice) was checked end to end: an OTP request leads to a credential finding and protective advice does not.
+
+The Scenario Lab has two Hindi samples (`hi-otp`, `hi-protective`, made with `say -v Lekha`) beside the six English ones.
+
+**Next steps for validated multilingual scam detection** (none of this exists yet): build labeled Hindi test sets from native-speaker annotation, including real calls and Hinglish code-mixing; measure Whisper's word error rate and translation quality per language and try larger models; have native speakers review and extend the keyword rules; evaluate a multilingual classifier against those sets with a held-out split; and check the voice model per language.
+
+## The analysis report
+
+Every analysis ends in one report page: the two assessments side by side and kept separate (scam intent from the transcript, voice authenticity from the audio), the most relevant next step, the audio player and timeline, the findings with their quoted sentences, the highlighted transcript (click a time to play from there), and a collapsed **Report details** panel. The voice score is shown as a percentage for display only and is always called the model's *fake-label score*: it is a normalized model output, not calibrated, and not the chance that a voice is fake (values under 1% or over 99% are shown as "<1%" and ">99%" so rounding never reads as certainty). Report details lists only what the backend reported (duration, windows analyzed, per-stage availability and warnings, model names and revisions, stage timings, limits); anything not reported is left out or shown as "Not reported". The report never merges the two assessments into one number and says nothing about accuracy.
 
 ## Next steps shown to the user
 
@@ -156,7 +197,7 @@ The results page opens with **What should I do next?**: the single most relevant
 
 What was checked, and how (Stage 6 audit, against a running server):
 
-- **Browser.** Recordings are held in browser memory until you press Analyze. The app uses no `localStorage`, `sessionStorage`, IndexedDB, or cookies. The results page plays the analyzed recording from the copy already in your browser; its object URL is revoked when you leave the results, and the microphone is released when you leave the page or stop. Leaving the page while an analysis runs aborts the request.
+- **Browser.** The language you choose is sent with the audio and is not stored. Nothing is translated, and no audio or text goes to any translation or other external service. Recordings are held in browser memory until you press Analyze. The app uses no `localStorage`, `sessionStorage`, IndexedDB, or cookies. The results page plays the analyzed recording from the copy already in your browser; its object URL is revoked when you leave the results, and the microphone is released when you leave the page or stop. Leaving the page while an analysis runs aborts the request.
 - **Server files.** The audio is written to disk in two temporary places while it is processed: the web framework spools any upload larger than 1 MB to a temporary file as it arrives (before any validation runs), and the app then copies it into a `voxshield-*` folder for decoding. After success, validation failure, decode failure, an oversized upload, and a client that disconnected mid-analysis, no upload folder or spool file remained. Folders left by a crashed process are swept at startup.
 - **Not a secure erase.** Deleted files are not overwritten, and the operating system may keep their contents in caches or swap. In Docker Compose `/tmp` is memory-backed, which keeps the audio off the container's filesystem but does not stop the host from swapping memory to disk.
 - **Memory.** The decoded audio and the transcript exist in memory for the length of the request and are returned to your browser. There is no database and no history.
@@ -167,9 +208,9 @@ Not covered: the host, its backups, its swap, or any logging outside this applic
 
 ## Limitations
 
-- The voice model was fine-tuned on ASVspoof 2019. Newer voice-cloning methods, phone compression, and noise can cause missed detections or false alarms. Its published metrics are the authors' claims; VoxShield has not evaluated it on its own data.
+- The voice model is licensed CC BY-NC-SA 4.0 (non-commercial use only). Its In-the-Wild figures are the authors' claims. On VoxShield's own benchmark it misses many Hindi neural voices, and over phone-quality audio it misses most neural voices and calls 3 to 8% of real voices "fake". The previous Apache-2.0 model still works through `VOXSHIELD_VOICE_MODEL_ID` but did worse on every test (see below).
 - Voice scores are uncalibrated raw outputs. The lean thresholds are fixed heuristics, documented in each result.
-- Scam detection is English-only, finds indicators rather than intent, and depends on transcription accuracy. The language model flags whole sentences, still mistakes negated advice and quoted scams for requests, and returns *inconclusive* on roughly one held-out example in five. It was evaluated only on synthetic text.
+- Scam detection reads English. Hindi is checked through an unvalidated machine translation plus keyword rules (see Languages); other languages get a transcript and an explicit "not validated" message, not a verdict. It finds indicators rather than intent, and depends on transcription accuracy. The language model flags whole sentences, still mistakes negated advice and quoted scams for requests, and returns *inconclusive* on roughly one held-out example in five. It was evaluated only on synthetic text.
 - A genuine voice does not make a call safe, and a synthetic voice does not prove fraud.
 - Analysis runs on CPU (M-series Mac, 10 cores, 16 GB). Measured on an 11.0 s clip: about 2.5 s warm (about 2.0 s of it Whisper), 2.6 s on the first request after preload, 4.9 s on a cold first request with no preload (2.3 s of it model loading). A first cold run earlier measured 8.9 s, so cold numbers vary with the OS file cache. A 9.9-minute recording took about 237 to 245 s, almost all in Whisper. A first run that downloads models adds download time.
 - In-browser recording captures only what the device microphone hears; it cannot capture a phone call's audio directly.

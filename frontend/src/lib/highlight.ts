@@ -38,6 +38,14 @@ export function segmentOf(indicator: IntentIndicator, segments: TranscriptSegmen
   return segments.find((segment) => segment.index === indicator.segment_index)
 }
 
+/** True for a finding whose offsets point into the English translation rather than the original transcript. */
+export const inTranslation = (indicator: Pick<IntentIndicator, 'text_source'>) => indicator.text_source === 'translation'
+
+/** The segments an indicator's offsets refer to: the translation's for a translated finding, otherwise the transcript's. */
+export function segmentsFor(indicator: Pick<IntentIndicator, 'text_source'>, transcript: { segments: TranscriptSegment[] }, translation?: { segments: TranscriptSegment[] } | null) {
+  return inTranslation(indicator) ? (translation?.segments ?? []) : transcript.segments
+}
+
 export const CATEGORY_LABELS: Record<string, string> = {
   credential_request: 'Asks for a code or secret',
   payment_pressure: 'Payment request',

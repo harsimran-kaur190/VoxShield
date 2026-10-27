@@ -157,12 +157,14 @@ def test_stream_endpoint_emits_progress_then_the_same_report_schema():
 def test_models_endpoint_reports_ids_and_makes_no_metric_claims():
     body = client.get("/api/v1/models").json()
     assert body["own_evaluation_performed"] is False
-    assert any(m["name"].startswith("Gustking/") for m in body["models"])
+    voice = next(m for m in body["models"] if m["role"] == "Voice authenticity")
+    assert voice["name"] == "nii-yamagishilab/mms-300m-anti-deepfake" and "non-commercial" in voice["license"]
 
 
 def test_models_endpoint_exposes_the_spot_check_caveat():
     body = client.get("/api/v1/models").json()
-    assert "not an evaluation" in body["voice_spot_check"]
+    note = body["voice_spot_check"]
+    assert "not real calls" in note and "optimistic" in note and "Hindi" in note and "Other languages were not tested" in note
 
 
 def test_excess_concurrent_analyses_get_a_clear_busy_error_and_slots_are_released(monkeypatch):

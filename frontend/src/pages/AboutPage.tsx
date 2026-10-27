@@ -3,23 +3,23 @@ import { useEffect, useState } from 'react'
 import { getModels } from '../lib/api'
 import type { ModelsResponse } from '../lib/types'
 
-const VOICE_MODEL_URL = 'https://huggingface.co/Gustking/wav2vec2-large-xlsr-deepfake-audio-classification'
+const VOICE_MODEL_URL = 'https://huggingface.co/nii-yamagishilab/mms-300m-anti-deepfake'
 
 /** Reported by the model's authors on its model page. Not measured by VoxShield. */
 const reported = [
-  ['Accuracy', '0.9286'],
-  ['Precision', '0.9999'],
-  ['Recall', '0.9205'],
-  ['F1 score', '0.9363'],
-  ['Equal error rate', '0.0401'],
+  ['ROC AUC', '0.996'],
+  ['Accuracy', '0.973'],
+  ['F1 score', '0.979'],
+  ['Equal error rate', '0.029'],
 ] as const
 
 const limitations = [
-  'The voice model was fine-tuned on ASVspoof 2019, an older benchmark. Newer voice-cloning systems may not be detected.',
-  'In VoxShield’s informal spot check the voice model favored “fake” for some real human recordings, so a “fake” label alone is weak evidence.',
+  'The voice model (NII AntiDeepfake, MMS-300M) is licensed for non-commercial use only. On VoxShield’s read-speech benchmark it caught most English neural voices but about six in ten Hindi ones, and over phone-quality audio it missed most neural voices. A “real” lean is not evidence that a voice is human.',
+  'Over phone-quality audio a few real voices (3 to 8% in the benchmark) were called “fake”, so a “fake” label alone is not proof either.',
   'VoxShield has not evaluated any model on labeled, representative data. The only measurement is a small comparison of the scam-intent detectors on synthetic, developer-written transcripts.',
   'Voice scores are normalized two-way scores from raw logits, not calibrated probabilities. They change with window length and position, and the lean thresholds are fixed heuristics.',
-  'Transcription errors can change meaning. The scam-intent detectors understand English only and can miss scams or flag harmless calls. The language model flags whole sentences, still mistakes negated advice and quoted scams for requests, and abstains (inconclusive) on about one example in five.',
+  'Transcription errors can change meaning. The scam-intent detectors read English and can miss scams or flag harmless calls. The language model flags whole sentences, still mistakes negated advice and quoted scams for requests, and abstains (inconclusive) on about one example in five.',
+  'Languages: English and Hindi can be selected. Hindi is transcribed in its own script, and scam detection for it runs on the speech-to-text model’s English translation of the audio, plus a short list of Hindi keyword rules on the original transcript; every translated finding shows the original sentence beside it. None of this has been validated: transcription and translation accuracy in Hindi has not been measured, and a mistranslation can add or hide a finding. Other languages, Punjabi included, get a transcript and a “not validated” message instead of a scam verdict. The voice model has not been evaluated in any language. The translation is shown next to the transcript and never replaces it.',
   'The two assessments are never merged into one score. A “real” label does not make a call safe, and a “fake” label does not prove fraud.',
   'When evidence is weak, the answer is Inconclusive rather than a guess. VoxShield never names anyone as a fraudster.',
 ]
@@ -73,9 +73,7 @@ export function AboutPage() {
       <header className="max-w-3xl">
         <p className="font-mono text-sm text-ink-3">Technical report</p>
         <h1 className="mt-1 font-display text-5xl font-medium tracking-tight">Evaluation &amp; limits</h1>
-        <p className="mt-4 text-lg text-ink-2">
-          The real models behind each result, what their authors report, and what VoxShield has and has not measured itself.
-        </p>
+        <p className="mt-4 text-lg text-ink-2">The models behind each result, and what has and has not been measured.</p>
       </header>
 
       <div className="mt-12 grid gap-12 lg:grid-cols-[14rem_1fr]">
@@ -93,7 +91,7 @@ export function AboutPage() {
 
         <div className="max-w-3xl">
           <Section id="models" title="Models in use">
-            {failed && <p className="text-danger">Could not load model details. Is the backend running?</p>}
+            {failed && <p className="text-amber">Could not load model details. Is the backend running?</p>}
             {!models && !failed && <p className="text-ink-3">Loading…</p>}
             <ul className="divide-y divide-line">
               {models?.models.map((model) => (
@@ -124,7 +122,7 @@ export function AboutPage() {
 
           <Section id="published" title="Published metrics (model authors)">
             <p className="text-ink-2">
-              Reported by the authors of the voice model on an ASVspoof 2019 evaluation subset, as stated on{' '}
+              Reported by the authors of the voice model on the In-the-Wild deepfake dataset (zero-shot), as stated on{' '}
               <a href={VOICE_MODEL_URL} className="text-accent underline underline-offset-4" target="_blank" rel="noreferrer">
                 the model page
               </a>
@@ -196,7 +194,7 @@ export function AboutPage() {
 
           <Section id="privacy" title="Privacy">
             <p className="text-ink-2">
-              Uploaded audio is written to temporary files on the machine running the backend (the web framework spools larger uploads while they arrive, then the app copies the file for decoding), analyzed, and deleted when the analysis ends, including on errors or when you leave the page. Deleting a file is not a secure erase, and the host may still hold data in caches or swap. Transcripts are returned to your browser and not kept or logged. There is no history. The waveform preview is drawn in your browser from the file you chose. Models are downloaded once from Hugging Face on first use.
+              The language you choose is sent with the audio and is not stored; nothing is translated and nothing is sent to any other service. Uploaded audio is written to temporary files on the machine running the backend (the web framework spools larger uploads while they arrive, then the app copies the file for decoding), analyzed, and deleted when the analysis ends, including on errors or when you leave the page. Deleting a file is not a secure erase, and the host may still hold data in caches or swap. Transcripts are returned to your browser and not kept or logged by the server. History holds completed reports in this browser tab’s memory only, and a refresh clears it. The waveform preview is drawn in your browser from the file you chose. Models are downloaded once from Hugging Face on first use.
             </p>
           </Section>
         </div>

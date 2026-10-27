@@ -1,8 +1,26 @@
 import { Link } from 'react-router-dom'
 
+import { languageName } from '../../lib/languages'
 import { lessonFor } from '../../lib/lessons'
-import { SAMPLE_LABEL, SCRIPT_LABEL, type Scenario } from '../../lib/scenarios'
+import { LAB_LANGUAGE_STATUS, SAMPLE_LABEL, SCRIPT_LABEL, type Scenario } from '../../lib/scenarios'
 import type { AnalysisReport } from '../../lib/types'
+
+/** Which languages the Lab covers and how far each has been checked, so nobody mistakes a sample for a validation. */
+export function LabLanguageStatus() {
+  return (
+    <details className="mt-6 max-w-2xl">
+      <summary className="flex min-h-6 cursor-pointer items-center font-mono text-sm text-ink-3 underline-offset-4 hover:underline pointer-coarse:min-h-11">Language support in this Lab</summary>
+      <dl className="mt-2 space-y-1.5 text-sm">
+        {LAB_LANGUAGE_STATUS.map((row) => (
+          <div key={row.language} className="grid grid-cols-[5rem_1fr] gap-3">
+            <dt className="font-medium text-ink">{row.language}</dt>
+            <dd className="text-ink-2">{row.status}</dd>
+          </div>
+        ))}
+      </dl>
+    </details>
+  )
+}
 
 /** Above the normal results: which sample this is, and that it was analyzed for real. */
 export function LabBanner({ scenario, onBack }: { scenario: Scenario; onBack: () => void }) {
@@ -15,6 +33,7 @@ export function LabBanner({ scenario, onBack }: { scenario: Scenario; onBack: ()
       <p className="mt-2 max-w-2xl text-sm text-ink-2">
         {SAMPLE_LABEL} It was analyzed just now by the VoxShield backend; everything below is that analysis, not a written outcome.
       </p>
+      <p className="mt-1 max-w-2xl text-sm text-ink-3">Language: {languageName(scenario.language)}, set for this sample.</p>
       <details className="mt-3 max-w-2xl text-sm">
         <summary className="flex min-h-6 cursor-pointer items-center text-accent underline-offset-4 hover:underline pointer-coarse:min-h-11">Script spoken in this sample</summary>
         <p className="mt-2 font-mono text-xs text-ink-3">{SCRIPT_LABEL}</p>

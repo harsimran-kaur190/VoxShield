@@ -1,13 +1,15 @@
 import { useCallback, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { AnalysisView } from '../components/AnalysisView'
 import { BackendStatus } from '../components/BackendStatus'
 import { ErrorNotice } from '../components/ErrorNotice'
-import { LabBanner, LessonPanel } from '../components/lab/LabContext'
+import { LabBanner, LabLanguageStatus, LessonPanel } from '../components/lab/LabContext'
 import { ScenarioPicker } from '../components/lab/ScenarioPicker'
 import { ResultsView } from '../components/results/ResultsView'
-import { useAnalysis } from '../hooks/useAnalysis'
+import { useAnalysis, useStartOverOnRenavigation } from '../hooks/useAnalysis'
 import { useBackend } from '../hooks/useApi'
+import { DEMO_CALL_PATH } from '../lib/callSimulation'
 import { analyzeScenario, SampleLoadError, SCENARIOS } from '../lib/scenarios'
 
 export function LabPage() {
@@ -25,9 +27,9 @@ export function LabPage() {
     setLoadError(null)
     setLoading(true)
     try {
-      await analyzeScenario(scenario, (file) => {
+      await analyzeScenario(scenario, (file, language) => {
         setRanId(scenario.id)
-        return start(file)
+        return start(file, language, { source: 'lab', title: scenario.title })
       })
     } catch (error) {
       setLoadError(error instanceof SampleLoadError ? error.message : 'The sample could not be analyzed.')
@@ -40,13 +42,14 @@ export function LabPage() {
     reset()
     setRanId(null)
   }, [reset])
+  useStartOverOnRenavigation(state.phase, back)
 
   const ran = SCENARIOS.find((s) => s.id === ranId)
   if (state.phase === 'done' && ran) {
     return (
       <div className="space-y-10">
         <LabBanner scenario={ran} onBack={back} />
-        <ResultsView report={state.report} waveform={state.waveform} audio={state.audio} onReset={back} onRetry={retry} />
+        <ResultsView report={state.report} waveform={state.waveform} audio={state.audio} entryId={state.entryId} onReset={back} onRetry={retry} />
         <LessonPanel report={state.report} />
       </div>
     )
@@ -71,11 +74,16 @@ export function LabPage() {
       <BackendStatus state={backend} />
       <h1 className="mt-5 font-display text-4xl font-medium tracking-tight sm:text-5xl">Scam Scenario Lab</h1>
       <p className="mt-4 max-w-2xl text-lg text-ink-2">
-        Six short, made-up situations, each spoken by a computer-generated voice. Pick one, read what it tests, then run it through the same analysis as any uploaded file. The results are produced by the real analysis, not written in advance.
+        Eight made-up situations, spoken by a computer voice. Pick one and run it through the real analysis.
       </p>
       <p className="mt-2 max-w-2xl text-sm text-ink-3">
-        The samples are synthetic speech and are not recordings of real calls. They show how the checks behave on these situations. They say nothing about accuracy on real calls.
+        Synthetic samples, not real calls, so they say nothing about accuracy on real calls.{' '}
+        <Link to={DEMO_CALL_PATH} className="font-medium text-accent underline underline-offset-4">
+          Try the simulated call
+        </Link>
       </p>
+
+      <LabLanguageStatus />
 
       <div className="mt-8 space-y-4">
         {error && (

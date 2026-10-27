@@ -48,7 +48,7 @@ describe('voice report: scores', () => {
     expect(html).toContain('82%')
     expect(html).toContain('median fake-label score, not a probability')
     expect(html).toContain('not the chance that the voice is fake')
-    expect(html).toContain('leans toward its “fake” label')
+    expect(html).toContain('leans toward the “fake” label')
     expect(html).not.toMatch(/82% (chance|probab|likel)|chance of a deepfake|probability (that )?the voice/i)
     expect(html).not.toMatch(/\b0\.\d\d\b/) // no raw 0-to-1 numbers are left on the page
   })
@@ -56,7 +56,7 @@ describe('voice report: scores', () => {
   it('a low score is shown the same way and leans real', () => {
     const html = voiceHtml(voiceOf('model_favors_real', 0.07, [0.05, 0.09]))
     expect(html).toContain('7%')
-    expect(html).toContain('leans toward its “real” label')
+    expect(html).toContain('leans toward the “real” label')
     expect(html).toContain('not confirmation that the voice is genuine')
   })
 
@@ -258,7 +258,7 @@ describe('compact report structure', () => {
     const html = voiceHtml(v)
     const at = html.indexOf('<details')
     const [shown, hidden] = [html.slice(0, at), html.slice(at)]
-    for (const text of ['82%', 'median fake-label score, not a probability', '3 windows analyzed · 3 at or above 50%', 'Scale from 0% to 100%', 'Voice analysis', 'leans toward its “fake” label']) expect(shown, text).toContain(text)
+    for (const text of ['82%', 'median fake-label score, not a probability', '3 windows analyzed · 3 at or above 50%', 'Scale from 0% to 100%', 'Voice analysis', 'leans toward the “fake” label']) expect(shown, text).toContain(text)
     for (const text of ['0:00–0:06', '0:06–0:12', 'Informal spot check, not an evaluation.', 'Majority of windows.', 'Voice limit one.', 'voice/model @ f7050b58', 'nothing more specific']) {
       expect(visibleText(shown), text).not.toContain(text)
       expect(visibleText(hidden), text).toContain(text)
@@ -267,12 +267,12 @@ describe('compact report structure', () => {
   })
 
   it('moves the exploratory spot-check sentence into the expander, still on the page', () => {
-    const v = { ...voiceOf('model_favors_fake', 0.82, [0.82]), summary: "The model's 'fake' label won in 1 of 1 windows. It did the same for some real recordings in VoxShield's spot check." }
+    const v = { ...voiceOf('model_favors_fake', 0.82, [0.82]), summary: "The model's 'fake' label won in 1 of 1 windows. On phone-quality audio it did the same for a few real voices in VoxShield's benchmark." }
     const html = voiceHtml(v)
     const at = html.indexOf('<details')
     expect(visibleText(html.slice(0, at))).toContain("The model's 'fake' label won in 1 of 1 windows.")
-    expect(visibleText(html.slice(0, at))).not.toMatch(/spot check/)
-    expect(visibleText(html.slice(at))).toContain("It did the same for some real recordings in VoxShield's spot check.")
+    expect(visibleText(html.slice(0, at))).not.toMatch(/benchmark/)
+    expect(visibleText(html.slice(at))).toContain("On phone-quality audio it did the same for a few real voices in VoxShield's benchmark.")
   })
 
   it('keeps the voice panel short on screen: well under a paragraph of reading before the expander', () => {

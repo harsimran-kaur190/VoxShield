@@ -3,8 +3,9 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from app.config import get_settings
-from app.schemas import HealthResponse, LimitsResponse
+from app.schemas import HealthResponse, LanguageChoice, LimitsResponse
 from app.services.audio_validation import ALLOWED_EXTENSIONS
+from app.services.languages import AUTO, SCAM_DETECTION_LANGUAGES, SELECTABLE, TRANSLATED_SCAM_LANGUAGES
 
 router = APIRouter(tags=["health"])
 
@@ -33,4 +34,14 @@ def limits() -> LimitsResponse:
         min_duration_seconds=settings.min_duration_seconds,
         max_duration_seconds=settings.max_duration_seconds,
         allowed_extensions=sorted(ALLOWED_EXTENSIONS),
+        languages=[
+            LanguageChoice(
+                code=o.code,
+                name=o.name,
+                scam_detection_validated=None if o.code == AUTO else o.code in SCAM_DETECTION_LANGUAGES,
+                scam_detection=None if o.code == AUTO else "direct" if o.code in SCAM_DETECTION_LANGUAGES
+                else "translated" if o.code in TRANSLATED_SCAM_LANGUAGES else None,
+            )
+            for o in SELECTABLE
+        ],
     )

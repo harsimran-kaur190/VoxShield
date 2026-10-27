@@ -1,12 +1,17 @@
-import { AlertTriangle, FileAudio, RotateCcw } from 'lucide-react'
+import { AlertTriangle, FileAudio, FileText, RotateCcw } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { useAudioPlayback } from '../../hooks/usePlayback'
 import { formatBytes, formatDuration } from '../../lib/format'
 import { indicatorKey } from '../../lib/highlight'
+import { languageLine } from '../../lib/languages'
+import { reportPath } from '../../lib/history'
 import { findingSeekTime, groupFindings } from '../../lib/playback'
+import { threatAlert } from '../../lib/threat'
 import type { AnalysisReport } from '../../lib/types'
 import type { Waveform } from '../../lib/waveform'
+import { buttonClass } from '../ui/styles'
 import { IntentSection } from './IntentSection'
 import { NextStep } from './NextStep'
 import { Overview } from './Overview'
@@ -15,6 +20,7 @@ import { ReportDetails } from './ReportDetails'
 import { RecommendationsSection } from './RecommendationsSection'
 import { scrollToFinding, scrollToId, scrollToMark } from './scroll'
 import { Timeline } from './Timeline'
+import { ThreatAlertPanel } from './ThreatAlertPanel'
 import { TranscriptWorkspace } from './TranscriptWorkspace'
 import { UnderstandingResults } from './UnderstandingResults'
 import { VoiceSection } from './VoiceSection'
@@ -37,17 +43,20 @@ interface Props {
   waveform?: Waveform | null
   /** The analyzed file or recording, held in memory for playback. Absent when it is no longer available. */
   audio?: Blob | null
+  /** This result's session-history entry, which links to its forensic report. */
+  entryId?: string
   onReset: () => void
   onRetry?: () => void
 }
 
-export function ResultsView({ report, waveform, audio = null, onReset, onRetry }: Props) {
+export function ResultsView({ report, waveform, audio = null, entryId, onReset, onRetry }: Props) {
   const { audio: meta } = report
   const [selected, setSelected] = useState<string | null>(null)
   const { controller, element } = useAudioPlayback(audio, meta.duration_seconds)
   const groups = useMemo(() => groupFindings(report.intent.indicators), [report.intent.indicators])
   const knownFindings = useMemo(() => new Set(report.intent.indicators.map(indicatorKey)), [report.intent.indicators])
   const note = processingNote(report.timings_seconds)
+  const alert = useMemo(() => threatAlert(report), [report])
 
   const seekToFinding = useCallback(
     (key: string) => {
@@ -93,11 +102,22 @@ export function ResultsView({ report, waveform, audio = null, onReset, onRetry }
             <p className="mt-1 font-mono text-xs text-ink-3">
               {meta.format.toUpperCase()} · {formatDuration(meta.duration_seconds)} · {formatBytes(meta.size_bytes)}
             </p>
+            <p className="mt-1 text-sm text-ink-2" data-testid="report-language">
+              Language: {languageLine(report.language)}
+            </p>
           </div>
-          <button type="button" onClick={onReset} className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-paper hover:bg-accent">
-            <RotateCcw className="size-4" aria-hidden />
-            Analyze another
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {entryId && (
+              <Link to={reportPath(entryId)} className={buttonClass({ variant: 'secondary' })}>
+                <FileText className="size-4" aria-hidden />
+                View forensic report
+              </Link>
+            )}
+            <button type="button" onClick={onReset} className={buttonClass()}>
+              <RotateCcw className="size-4" aria-hidden />
+              Analyze another
+            </button>
+          </div>
         </header>
 
         {report.status !== 'complete' && (
@@ -116,6 +136,8 @@ export function ResultsView({ report, waveform, audio = null, onReset, onRetry }
           </div>
         )}
 
+        {alert && <ThreatAlertPanel alert={alert} compact onReviewEvidence={() => scrollToId('intent-heading')} />}
+
         <Overview report={report} groups={groups} />
 
         {report.status !== 'failed' && <NextStep plan={report.recommendations} onRetry={onRetry} />}
@@ -123,17 +145,17 @@ export function ResultsView({ report, waveform, audio = null, onReset, onRetry }
         {/* Same order as the overview: what is said (the evidence you can act on) first, then how the voice sounds. */}
         <div className="grid gap-12 lg:grid-cols-[7fr_5fr] lg:gap-0">
           <div className="lg:pr-12">
-            <IntentSection intent={report.intent} transcript={report.transcript} groups={groups} selected={selected} onSelect={selectFinding} onShowInTranscript={showInTranscript} />
+            <IntentSection intent={report.intent} transcript={report.transcript} language={report.language} translation={report.translation} groups={groups} selected={selected} onSelect={selectFinding} onShowInTranscript={showInTranscript} />
           </div>
           <div className="lg:border-l lg:border-line lg:pl-12">
-            <VoiceSection voice={report.voice} />
+            <VoiceSection voice={report.voice} language={report.language} />
           </div>
         </div>
 
         {/* The player and timeline come after the evidence they point into: findings and the voice panel first. */}
         <Timeline report={report} waveform={waveform} groups={groups} selected={selected} onSelect={selectFinding} onChooseAgain={onReset} />
 
-        <TranscriptWorkspace transcript={report.transcript} indicators={report.intent.indicators} selected={selected} onSelect={selectFinding} />
+        <TranscriptWorkspace transcript={report.transcript} language={report.language} translation={report.translation} indicators={report.intent.indicators} selected={selected} onSelect={selectFinding} />
         {/* With nothing to act on, the summary at the top already says what this section would. A failed analysis has no summary there, so it keeps this one for its retry button. */}
         {(report.recommendations.state === 'actions' || report.status === 'failed') && (
           <RecommendationsSection
@@ -148,7 +170,7 @@ export function ResultsView({ report, waveform, audio = null, onReset, onRetry }
         <UnderstandingResults />
 
         <p className="text-center text-sm text-ink-3">
-          Temporary copies of the audio are deleted from the server after analysis, and neither audio nor transcript is kept. Playback uses the copy in your browser, which is released when you leave this page.
+          The server keeps no audio or transcript. Playback uses the copy in your browser.
           {note && ` ${note}`}
         </p>
       </div>

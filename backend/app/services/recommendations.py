@@ -170,6 +170,12 @@ VOICE_ONLY_HEADLINE = (
 )
 
 
+VOICE_ONLY_NO_SCAM_CHECK_HEADLINE = (
+    "The voice model leaned “fake”. Scam detection did not run for this recording, so nothing is known about what was said. "
+    "Treat the voice result as a reason to confirm who is speaking, not as a sign of a scam."
+)
+
+
 def _general(transcript: TranscriptResult | None, intent: IntentAssessment) -> list[Recommendation]:
     """Ordinary precautions for a quiet or ambiguous result. Only when there was a transcript to look at."""
     if transcript is None or transcript.status != "ok" or intent.error:
@@ -179,7 +185,11 @@ def _general(transcript: TranscriptResult | None, intent: IntentAssessment) -> l
     return []
 
 
-def build_recommendations(voice: VoiceAssessment, intent: IntentAssessment, transcript: TranscriptResult | None = None) -> RecommendationPlan:
+def build_recommendations(
+    voice: VoiceAssessment, intent: IntentAssessment, transcript: TranscriptResult | None = None, scam_check_ran: bool = True
+) -> RecommendationPlan:
+    """`scam_check_ran` is False when scam detection was withheld (for example, for a language it was not built for), so a
+    voice-only plan must not say that nothing suspicious was found in the conversation."""
     direct = [i for i in intent.indicators if i.context == "direct"]
     ranked: list[tuple[Recommendation, str]] = []
     for action in ACTIONS:
@@ -210,7 +220,8 @@ def build_recommendations(voice: VoiceAssessment, intent: IntentAssessment, tran
         items = [rec.model_copy(update={"secondary": index >= MAX_PRIMARY}) for index, (rec, _) in enumerate(ranked)]
         count = sum(len(rec.evidence) for rec in items)
         if all(rec.basis == "voice" for rec in items):
-            return RecommendationPlan(state="actions", headline=VOICE_ONLY_HEADLINE, items=items, general=_general(transcript, intent))
+            headline = VOICE_ONLY_HEADLINE if scam_check_ran else VOICE_ONLY_NO_SCAM_CHECK_HEADLINE
+            return RecommendationPlan(state="actions", headline=headline, items=items, general=_general(transcript, intent))
         headline = f"Based on {count} finding{'s' if count != 1 else ''}: {_join([phrase for _, phrase in ranked])}."
         return RecommendationPlan(state="actions", headline=headline, items=items)
 
