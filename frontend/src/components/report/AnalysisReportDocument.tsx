@@ -47,7 +47,7 @@ export function AnalysisReportDocument({ entry }: { entry: AnalysisEntry }) {
       typeBadge={TYPE[entry.source].badge}
       typeLabel={TYPE[entry.source].label}
       title={entry.title}
-      back={entry.source === 'lab' ? { to: '/lab', label: 'Scenario Lab' } : { to: '/', label: 'Analyze audio' }}
+      back={entry.source === 'lab' ? { to: '/lab', label: 'Scenario Lab' } : { to: '/analyze', label: 'Analyze audio' }}
       facts={[
         ['Status', STATUS[report.status]],
         ['Recording', `${audio.filename} · ${audio.format.toUpperCase()} · ${formatDuration(audio.duration_seconds)} · ${formatBytes(audio.size_bytes)}`],

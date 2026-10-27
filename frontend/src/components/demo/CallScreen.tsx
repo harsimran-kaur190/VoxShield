@@ -117,11 +117,11 @@ function Declined({ heading, onRestart }: { heading: HeadingRef; onRestart: () =
       <Title heading={heading}>Simulation declined</Title>
       <p className="mt-2 text-ink-2">You ended the simulated call. It only existed on this page, so no real call was declined or affected.</p>
       <div className="mt-6 flex flex-wrap gap-2">
-        <Link to="/home" className={buttonClass({ variant: 'secondary' })}>
+        <Link to="/" className={buttonClass({ variant: 'secondary' })}>
           <Home className="size-4" aria-hidden />
           Return Home
         </Link>
-        <Link to="/" className={buttonClass()}>
+        <Link to="/analyze" className={buttonClass()}>
           <AudioLines className="size-4" aria-hidden />
           Open Analyze
         </Link>

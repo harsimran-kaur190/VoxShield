@@ -36,7 +36,7 @@ function CallCta() {
 
 function AnalyzeCta() {
   return (
-    <Link to="/" className={buttonClass({ variant: 'secondary', size: 'lg' })}>
+    <Link to="/analyze" className={buttonClass({ variant: 'secondary', size: 'lg' })}>
       <AudioLines className="size-4" aria-hidden />
       Analyze Audio
     </Link>

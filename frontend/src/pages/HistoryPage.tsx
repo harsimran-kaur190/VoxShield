@@ -41,7 +41,7 @@ export function HistoryPage() {
           description="Analyze a recording, run a Lab sample, or finish the simulated call to see it here."
           action={
             <div className="flex flex-wrap justify-center gap-2">
-              <Link to="/" className={buttonClass()}>
+              <Link to="/analyze" className={buttonClass()}>
                 <AudioLines className="size-4" aria-hidden />
                 Analyze Audio
               </Link>

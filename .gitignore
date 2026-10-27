@@ -51,6 +51,9 @@ backend/evaluation/cache/
 *.flac
 *.aiff
 !backend/tests/fixtures/jfk.flac
+# Scenario Lab and call-demo samples: computer-generated speech the app plays, not real recordings.
+!frontend/public/lab/*.flac
+!frontend/public/demo/*.flac
 
 # ---- Deployment tooling ----
 .vercel/

@@ -28,12 +28,12 @@ async function follow(from: string, label: string) {
 }
 
 describe('HomePage', () => {
-  const html = at('/home')
+  const html = at('/')
 
   it('shows the headline and both main calls to action', () => {
     expect(html).toContain('Hear the threat before it’s too late.')
     expect(hrefOf(html, 'Simulate an Incoming Call')).toBe('/demo/call')
-    expect(hrefOf(html, 'Analyze Audio')).toBe('/')
+    expect(hrefOf(html, 'Analyze Audio')).toBe('/analyze')
   })
 
   it('says it analyzes provided audio and does not intercept calls', () => {
@@ -72,37 +72,42 @@ describe('HomePage', () => {
 })
 
 describe('navigation', () => {
+  it('Home is the index page, and the old /home address is kept (it redirects in the browser)', () => {
+    expect(at('/')).toContain('Hear the threat before it’s too late.')
+    expect(at('/home')).not.toContain('That page isn&#x27;t here.')
+  })
+
   it('Home → Analyze opens the existing upload and record workflow', async () => {
-    const { pathname, html } = await follow('/home', 'Analyze Audio')
-    expect(pathname).toBe('/')
+    const { pathname, html } = await follow('/', 'Analyze Audio')
+    expect(pathname).toBe('/analyze')
     expect(html).toContain('Drop a call recording here')
   })
 
   it('Home → Simulate an Incoming Call opens the simulated call', async () => {
-    const { pathname, html } = await follow('/home', 'Simulate an Incoming Call')
+    const { pathname, html } = await follow('/', 'Simulate an Incoming Call')
     expect(pathname).toBe('/demo/call')
     expect(html).toContain('Accept Call')
   })
 
   it('the header offers Home, Analyze Audio, Scenario Lab, History, Evaluation & Limits and Launch Simulation, and the logo goes Home', () => {
     const html = at('/lab')
-    expect(hrefOf(html, 'Home')).toBe('/home')
-    expect(hrefOf(html, 'Analyze Audio')).toBe('/')
+    expect(hrefOf(html, 'Home')).toBe('/')
+    expect(hrefOf(html, 'Analyze Audio')).toBe('/analyze')
     expect(hrefOf(html, 'Scenario Lab')).toBe('/lab')
     expect(hrefOf(html, 'History')).toBe('/history')
     expect(hrefOf(html, 'Evaluation &amp; Limits')).toBe('/about')
     expect(hrefOf(html, 'Launch Simulation')).toBe('/demo/call')
-    expect(html).toMatch(/<a [^>]*aria-label="VoxShield home"[^>]*href="\/home"|<a [^>]*href="\/home"[^>]*aria-label="VoxShield home"/)
+    expect(html).toMatch(/<a [^>]*aria-label="VoxShield home"[^>]*href="\/"|<a [^>]*href="\/"[^>]*aria-label="VoxShield home"/)
   })
 
   it('keeps the header Launch Simulation label for screen readers but hides it visually on phones, so the menu button fits', () => {
-    const link = at('/home').match(/<a [^>]*href="\/demo\/call"[^>]*>.*?<\/a>/)![0]
+    const link = at('/').match(/<a [^>]*href="\/demo\/call"[^>]*>.*?<\/a>/)![0]
     expect(link).toContain('<span class="max-sm:sr-only">Launch Simulation</span>')
     expect(link).toContain('max-sm:w-11')
   })
 
   it('has a collapsed mobile menu button', () => {
-    expect(at('/home')).toMatch(/<button[^>]*aria-expanded="false"[^>]*aria-label="Open menu"/)
+    expect(at('/')).toMatch(/<button[^>]*aria-expanded="false"[^>]*aria-label="Open menu"/)
   })
 
   it('Launch Simulation in the header opens the simulated call', async () => {
@@ -113,7 +118,7 @@ describe('navigation', () => {
 
 describe('existing routes stay available', () => {
   it.each([
-    ['/', 'Drop a call recording here'],
+    ['/analyze', 'Drop a call recording here'],
     ['/lab', 'Scam Scenario Lab'],
     ['/about', 'Evaluation'],
     ['/demo/analysis', 'Simulated Live Analysis'],

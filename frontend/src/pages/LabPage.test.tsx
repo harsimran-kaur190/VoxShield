@@ -62,7 +62,7 @@ describe('results context', () => {
     expect(html).toContain('computer-generated speech')
     expect(html).toContain('analyzed just now by the VoxShield backend')
     expect(html).toContain('Try another scenario')
-    expect(html).toContain('href="/"')
+    expect(html).toContain('href="/analyze"')
     expect(html).toContain('Script spoken in this sample')
   })
 

@@ -43,7 +43,7 @@ export function LabBanner({ scenario, onBack }: { scenario: Scenario; onBack: ()
         <button type="button" onClick={onBack} className="inline-flex min-h-6 items-center text-accent underline underline-offset-4 pointer-coarse:min-h-11">
           Try another scenario
         </button>
-        <Link to="/" className="inline-flex min-h-6 items-center text-accent underline underline-offset-4 pointer-coarse:min-h-11">
+        <Link to="/analyze" className="inline-flex min-h-6 items-center text-accent underline underline-offset-4 pointer-coarse:min-h-11">
           Use your own recording instead
         </Link>
       </p>

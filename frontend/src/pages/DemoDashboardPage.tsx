@@ -108,7 +108,7 @@ export function LiveDashboard({ scenario, initialState, initialEvidence = null, 
             <Info className="mt-px size-3.5 shrink-0" aria-hidden />
             {SIMULATION_NOTICE}
           </span>
-          <Link to="/" className="inline-flex items-center gap-1 font-medium text-accent underline-offset-4 hover:underline">
+          <Link to="/analyze" className="inline-flex items-center gap-1 font-medium text-accent underline-offset-4 hover:underline">
             Analyze a real recording
             <ArrowRight className="size-3.5" aria-hidden />
           </Link>

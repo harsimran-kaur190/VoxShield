@@ -9,8 +9,8 @@ import { buttonClass } from './ui/styles'
 
 // New top-level pages are added here and in App.tsx. Reports open from History, so they have no entry of their own.
 const links: { to: string; label: string; icon: LucideIcon }[] = [
-  { to: '/home', label: 'Home', icon: House },
-  { to: '/', label: 'Analyze Audio', icon: AudioLines },
+  { to: '/', label: 'Home', icon: House },
+  { to: '/analyze', label: 'Analyze Audio', icon: AudioLines },
   { to: '/lab', label: 'Scenario Lab', icon: FlaskConical },
   { to: '/history', label: 'History', icon: History },
   { to: '/about', label: 'Evaluation & Limits', icon: ShieldCheck },
@@ -39,7 +39,7 @@ export function Layout() {
       </a>
       <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur" onKeyDown={(event) => event.key === 'Escape' && close()}>
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Link to="/home" aria-label="VoxShield home" className="shrink-0 rounded-control" onClick={close}>
+          <Link to="/" aria-label="VoxShield home" className="shrink-0 rounded-control" onClick={close}>
             <Logo />
           </Link>
           <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">

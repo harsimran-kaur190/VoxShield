@@ -58,7 +58,7 @@ export function DashboardHeader({ state, reportHref, sound, onPause, onResume, o
     <header className="border-b border-line bg-paper">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-3 sm:px-6">
         <div className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-2">
-          <Link to="/home" aria-label="VoxShield home" className="shrink-0 rounded-control">
+          <Link to="/" aria-label="VoxShield home" className="shrink-0 rounded-control">
             <Logo />
           </Link>
           <span className="hidden h-6 w-px bg-line sm:block" aria-hidden />
@@ -195,7 +195,7 @@ export function CompletionPanel({ state, reportHref, indicatorCount, heading, on
         <Button variant="secondary" icon={FileText} onClick={onViewFull}>
           View Full Transcript
         </Button>
-        <Link to="/" className={buttonClass({ variant: 'secondary' })}>
+        <Link to="/analyze" className={buttonClass({ variant: 'secondary' })}>
           <AudioLines className="size-4" aria-hidden />
           Analyze Real Audio
         </Link>

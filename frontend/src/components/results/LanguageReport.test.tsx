@@ -227,8 +227,8 @@ describe('language selector', () => {
     expect(html).toContain('Record audio')
   })
 
-  it('appears on the home page', () => {
-    const html = renderToStaticMarkup(<MemoryRouter><App /></MemoryRouter>)
+  it('appears on the Analyze Audio page', () => {
+    const html = renderToStaticMarkup(<MemoryRouter initialEntries={['/analyze']}><App /></MemoryRouter>)
     expect(html).toContain('Spoken language')
     expect(html).toMatch(/<option value="auto" selected/)
   })

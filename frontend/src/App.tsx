@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 
 import { Layout } from './components/Layout'
 import { AboutPage } from './pages/AboutPage'
@@ -16,8 +16,10 @@ export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route index element={<DashboardPage />} />
-        <Route path="home" element={<HomePage />} />
+        <Route index element={<HomePage />} />
+        <Route path="analyze" element={<DashboardPage />} />
+        {/* Home used to live here; old links and bookmarks still land on it. */}
+        <Route path="home" element={<Navigate to="/" replace />} />
         <Route path="lab" element={<LabPage />} />
         <Route path="history" element={<HistoryPage />} />
         <Route path="reports/:id" element={<ReportPage />} />

@@ -72,8 +72,8 @@ describe('CallScreen', () => {
     const html = screen('declined')
     expect(html).toContain('Simulation declined')
     expect(html).toContain('no real call was declined or affected')
-    expect(linkTo(html, 'Return Home')).toBe('/home')
-    expect(linkTo(html, 'Open Analyze')).toBe('/')
+    expect(linkTo(html, 'Return Home')).toBe('/')
+    expect(linkTo(html, 'Open Analyze')).toBe('/analyze')
     expect(html).not.toContain('Accept Call')
   })
 

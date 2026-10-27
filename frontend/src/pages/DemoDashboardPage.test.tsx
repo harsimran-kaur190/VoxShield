@@ -123,7 +123,7 @@ describe('LiveDashboard', () => {
     expect(html).toContain('Pause Analysis')
     expect(html).toContain('End Simulation')
     expect(html).toContain('No real call or real person is involved, and the transcript is the script, not speech recognition.')
-    expect(hrefOf(html, 'Analyze a real recording')).toBe('/')
+    expect(hrefOf(html, 'Analyze a real recording')).toBe('/analyze')
   })
 
   it('keeps scam intent and voice authenticity in separate cards', () => {
@@ -171,7 +171,7 @@ describe('LiveDashboard', () => {
     expect(html).not.toContain('End Simulation')
     expect(hrefOf(html, 'View Forensic Report')).toBe('/demo/report')
     expect(text(html)).toContain('View Full Transcript')
-    expect(hrefOf(html, 'Analyze Real Audio')).toBe('/')
+    expect(hrefOf(html, 'Analyze Real Audio')).toBe('/analyze')
     expect(text(html)).toContain('Restart Simulation')
   })
 
@@ -277,7 +277,7 @@ describe('demo navigation', () => {
 
   it('the existing Analyze workflow at / is unchanged and free of demo data', () => {
     const html = renderToStaticMarkup(
-      <MemoryRouter initialEntries={['/']}>
+      <MemoryRouter initialEntries={['/analyze']}>
         <App />
       </MemoryRouter>,
     )

@@ -34,7 +34,7 @@ export function ReportMissing({ title = 'This report is not available', descript
               <History className="size-4" aria-hidden />
               Open History
             </Link>
-            <Link to="/" className={buttonClass()}>
+            <Link to="/analyze" className={buttonClass()}>
               Analyze audio
             </Link>
           </div>
