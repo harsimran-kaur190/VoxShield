@@ -1,3 +1,4 @@
+import type { LiveAlert, TranscriptLine } from './liveCall/types'
 import type { SimulationStatus } from './liveSimulation'
 import type { AnalysisReport } from './types'
 
@@ -42,15 +43,32 @@ export interface SimulationEntry extends BaseEntry {
   duration: number
 }
 
-export type HistoryEntry = AnalysisEntry | SimulationEntry
-type NewEntry = Omit<AnalysisEntry, 'id' | 'completedAt'> | Omit<SimulationEntry, 'id' | 'completedAt'>
+/** A Live Call Protection call: the alerts and transcript the listener saw. No audio is kept, here or on the server. */
+export interface LiveCallEntry extends BaseEntry {
+  kind: 'live-call'
+  title: string
+  /** When audio first connected, as an ISO string; null if the other person never connected. */
+  startedAt: string | null
+  durationSeconds: number
+  endReason: 'you' | 'peer' | 'lost' | 'error' | null
+  alerts: LiveAlert[]
+  transcript: TranscriptLine[]
+  analysisRuns: number
+  /** When the last analysis result arrived, as an ISO string; null if none did. */
+  lastAnalysisAt: string | null
+  /** Analysis problems seen during the call, so a quiet report is not mistaken for a clean one. */
+  limitations: string[]
+}
+
+export type HistoryEntry = AnalysisEntry | SimulationEntry | LiveCallEntry
+type NewEntry = Omit<AnalysisEntry, 'id' | 'completedAt'> | Omit<SimulationEntry, 'id' | 'completedAt'> | Omit<LiveCallEntry, 'id' | 'completedAt'>
 
 let entries: HistoryEntry[] = []
 const listeners = new Set<() => void>()
 let counter = 0
 
 function newId(kind: HistoryEntry['kind']): string {
-  const prefix = kind === 'analysis' ? 'AN' : 'SIM'
+  const prefix = kind === 'analysis' ? 'AN' : kind === 'live-call' ? 'CALL' : 'SIM'
   const random = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID().slice(0, 8) : `${Date.now().toString(36)}${(counter++).toString(36)}`
   return `${prefix}-${random.toUpperCase()}`
 }

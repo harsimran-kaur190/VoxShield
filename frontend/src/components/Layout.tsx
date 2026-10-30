@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import { AudioLines, FlaskConical, History, House, Menu, PhoneIncoming, ShieldCheck, X } from 'lucide-react'
+import { AudioLines, FlaskConical, History, House, Menu, PhoneCall, PhoneIncoming, ShieldCheck, X } from 'lucide-react'
 import { useId, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 
@@ -11,6 +11,7 @@ import { buttonClass } from './ui/styles'
 const links: { to: string; label: string; icon: LucideIcon }[] = [
   { to: '/', label: 'Home', icon: House },
   { to: '/analyze', label: 'Analyze Audio', icon: AudioLines },
+  { to: '/call', label: 'Live Call', icon: PhoneCall },
   { to: '/lab', label: 'Scenario Lab', icon: FlaskConical },
   { to: '/history', label: 'History', icon: History },
   { to: '/about', label: 'Evaluation & Limits', icon: ShieldCheck },

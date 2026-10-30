@@ -9,6 +9,7 @@ import { DemoReportPage } from './pages/DemoReportPage'
 import { HistoryPage } from './pages/HistoryPage'
 import { HomePage } from './pages/HomePage'
 import { LabPage } from './pages/LabPage'
+import { LiveCallPage } from './pages/LiveCallPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { ReportPage } from './pages/ReportPage'
 
@@ -21,6 +22,8 @@ export default function App() {
         {/* Home used to live here; old links and bookmarks still land on it. */}
         <Route path="home" element={<Navigate to="/" replace />} />
         <Route path="lab" element={<LabPage />} />
+        <Route path="call" element={<LiveCallPage />} />
+        <Route path="call/:roomId" element={<LiveCallPage />} />
         <Route path="history" element={<HistoryPage />} />
         <Route path="reports/:id" element={<ReportPage />} />
         <Route path="about" element={<AboutPage />} />

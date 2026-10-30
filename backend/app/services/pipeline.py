@@ -71,8 +71,6 @@ class AnalysisPipeline:
         """Yield progress events, then a final {'type': 'report', 'report': AnalysisReport}.
 
         `language` is one of the values parsed by app.services.languages.parse_requested_language."""
-        errors: list[ComponentError] = []
-        timings: dict[str, float] = {}
         request_started = time.perf_counter()
 
         yield _stage("decode", "running")
@@ -81,11 +79,21 @@ class AnalysisPipeline:
             audio = load_mono_16k(audio_path, max_seconds=self._settings.max_duration_seconds * 1.05 + 1)
         except AudioDecodeError as error:
             yield _stage("decode", "failed")
-            errors.append(ComponentError(component="audio", code="decode_failed", message=str(error)))
+            errors = [ComponentError(component="audio", code="decode_failed", message=str(error))]
             yield {"type": "report", "report": self._failed_report(metadata, errors, language)}
             return
-        timings["decode"] = round(time.perf_counter() - started, 2)
+        decode_seconds = round(time.perf_counter() - started, 2)
         yield _stage("decode", "done")
+        yield from self.run_samples(audio, metadata, language, timings={"decode": decode_seconds}, request_started=request_started)
+
+    def run_samples(
+        self, audio, metadata: AudioMetadata, language: str = AUTO, timings: dict[str, float] | None = None, request_started: float | None = None
+    ) -> Iterator[dict[str, Any]]:
+        """The same analysis on audio that is already decoded to mono float32 at 16 kHz (used by live calls, which
+        never write audio to disk). Yields the same events as run(), without the decode stage."""
+        errors: list[ComponentError] = []
+        timings = dict(timings or {})
+        request_started = request_started if request_started is not None else time.perf_counter()
 
         yield _stage("transcription", "running")
         started = time.perf_counter()
@@ -172,6 +180,10 @@ class AnalysisPipeline:
         if translated is None:
             intent = intent.model_copy(update={"method": INDIC_METHOD, "detector": "rules"})
         return intent
+
+    def models_loaded(self) -> bool:
+        """True once every model component has loaded (components without a `loaded` flag count as ready)."""
+        return all(self._is_loaded(c) for c in (self._transcriber, self._voice, self._intent))
 
     @staticmethod
     def _is_loaded(component: Any) -> bool:

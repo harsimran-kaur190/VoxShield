@@ -45,3 +45,9 @@ class UploadValidationResponse(BaseModel):
 class ErrorBody(BaseModel):
     code: str
     message: str
+
+
+class CallRoomCreated(BaseModel):
+    room_id: str
+    max_participants: int
+    idle_expiry_seconds: float

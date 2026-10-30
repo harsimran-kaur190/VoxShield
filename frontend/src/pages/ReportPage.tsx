@@ -2,6 +2,7 @@ import { FileQuestion, History } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 
 import { AnalysisReportDocument } from '../components/report/AnalysisReportDocument'
+import { LiveCallReportDocument } from '../components/report/LiveCallReportDocument'
 import { SimulationReportDocument } from '../components/report/SimulationReportDocument'
 import { EmptyState } from '../components/ui/Feedback'
 import { buttonClass } from '../components/ui/styles'
@@ -15,6 +16,7 @@ export function ReportPage() {
   const entry = useHistory().find((item) => item.id === id) ?? null
 
   if (entry?.kind === 'analysis') return <AnalysisReportDocument entry={entry} />
+  if (entry?.kind === 'live-call') return <LiveCallReportDocument entry={entry} />
   const scenario = entry?.kind === 'simulation' ? DEMO_SCENARIOS[entry.scenarioId] : undefined
   if (entry?.kind === 'simulation' && scenario) return <SimulationReportDocument entry={entry} scenario={scenario} />
 

@@ -8,11 +8,13 @@ ENV PYTHONUNBUFFERED=1 \
     HF_HOME=/opt/hf-cache
 
 WORKDIR /srv
-RUN useradd --system --uid 10001 --home-dir /srv voxshield
+# uid 1000: Hugging Face Docker Spaces run the container as user ID 1000, and other hosts accept any non-root user.
+RUN useradd --system --uid 1000 --home-dir /srv voxshield
 
 # CPU-only PyTorch: the default build bundles CUDA libraries and adds gigabytes the server can never use.
-COPY requirements.txt .
-RUN pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
+# The lock file pins the versions the tests and local runs used (it resolves for Linux / Python 3.12 as well).
+COPY requirements.txt requirements.lock.txt ./
+RUN pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt -c requirements.lock.txt
 
 COPY app ./app
 COPY scripts/download_models.py scripts/download_models.py

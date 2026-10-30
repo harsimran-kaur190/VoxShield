@@ -51,6 +51,54 @@ The API is not published to the host. To serve it on the internet, put a TLS-ter
 nginx with certificates, or your cloud's load balancer) in front of port 8080. **Without https the microphone does not work**,
 except on `localhost`.
 
+## Option C: API on a Hugging Face Docker Space, web app on Vercel (low-cost demo)
+
+A Hugging Face Space on the free **CPU basic** hardware has 2 vCPU and 16 GB of RAM, https on `*.hf.space`, and a
+single container, which suits the single-worker API. Creating a **Docker** Space needs a Hugging Face **PRO** account
+(about $9 a month at the time of writing; check huggingface.co/pricing). The Space must be **public** (a private Space
+is not reachable from other people's browsers). On free hardware it sleeps when unused; the first visit after that
+waits for it to start again, and a restart or rebuild ends every live call.
+
+1. Stage the Space (copies the API into a new folder; the repository is not changed), create it, and upload:
+   ```bash
+   deploy/huggingface/stage.sh /tmp/voxshield-space
+   hf auth login                                   # once
+   hf repo create <user>/voxshield-api --repo-type space --space-sdk docker
+   hf upload <user>/voxshield-api /tmp/voxshield-space . --repo-type space
+   ```
+   The Space builds `backend/Dockerfile` (it downloads about 2 GB of models during the build) and serves port 8000
+   (`app_port` in `deploy/huggingface/README.md`).
+2. In the Space's settings, add **Variables** `VOXSHIELD_CORS_ORIGINS` = `["https://<your-app>.vercel.app"]` and, if you
+   use TURN, `VOXSHIELD_TURN_URLS`; add `VOXSHIELD_TURN_SECRET` as a **Secret**, never as a Variable (Variables are public).
+3. Deploy the web app on Vercel as in Option A, with `VITE_API_BASE_URL=https://<user>-voxshield-api.hf.space/api/v1`.
+4. Check `https://<user>-voxshield-api.hf.space/api/v1/ready` returns 200, then run the smoke test.
+
+Limits to know: every visitor reaches the API through Hugging Face's proxy, whose addresses are not published, so
+`FORWARDED_ALLOW_IPS` stays at its default and **all visitors share one rate-limit bucket** (20 analyses a minute, 10 empty
+call rooms). That is fine for a two-person test, not for a public launch. Two vCPU analyse more slowly than a laptop: with
+both participants talking, live results may show as delayed. If they do, set `VOXSHIELD_CALL_ANALYSIS_STEP_SECONDS=8`
+(fewer analyses), or move to the paid CPU upgrade hardware.
+
+## Live calls over the internet: STUN, TURN and privacy
+
+Browsers connect to each other directly when they can. STUN (Google's public server by default) lets each browser learn
+its public address, which works on most home networks. It often **fails on mobile carrier networks, corporate and
+university Wi-Fi, and other strict NATs**: the call then shows "Connecting audio…" and never connects. A TURN relay fixes
+that by relaying the audio.
+
+* The API issues **short-lived TURN credentials** (TURN REST API, HMAC of the shared secret) to each participant; the
+  secret itself never reaches a browser. This works with **coturn** (`use-auth-secret`, `static-auth-secret=<secret>`) on
+  any small VM with a public address, with ports 3478 (UDP/TCP) and 5349 or 443 (TLS) open. Set
+  `VOXSHIELD_TURN_URLS='["turn:turn.example.org:3478","turns:turn.example.org:443?transport=tcp"]'` and `VOXSHIELD_TURN_SECRET`.
+* Managed TURN services that mint credentials through their own API (for example Cloudflare Realtime TURN) are **not
+  supported yet**: they would need a small backend change to request credentials from that API.
+* Whether a call went direct or through TURN is shown in the call ("Connection: … relayed via TURN" or "direct").
+
+**Privacy.** On a direct connection each participant's browser learns the other's public IP address (browsers hide local
+addresses behind mDNS names). The STUN server sees both addresses too. Through TURN, the relay operator sees both addresses
+and carries the encrypted (DTLS-SRTP) audio, which it cannot decode. Separately, each browser sends the audio it *receives*
+to the VoxShield API for analysis, with both participants' consent; the API keeps it only in memory for the analysis.
+
 ## Configuration reference
 
 Set as environment variables (prefix `VOXSHIELD_`). Defaults are in `backend/app/config.py` and `backend/.env.example`.
@@ -68,6 +116,21 @@ Set as environment variables (prefix `VOXSHIELD_`). Defaults are in `backend/app
 | `WHISPER_MODEL_SIZE` | `small` | `base` is faster and less accurate |
 | `FORWARDED_ALLOW_IPS` (no prefix) | `127.0.0.1` | Proxies whose `X-Forwarded-For` is trusted |
 | `HF_HUB_OFFLINE` (no prefix) | `1` in the image | Never contact Hugging Face at runtime |
+| `CALL_STUN_URLS` | Google public STUN | STUN servers handed to Live Call participants |
+| `TURN_URLS` / `TURN_SECRET` | none | TURN relay (coturn `use-auth-secret`). Browsers get short-lived HMAC credentials; the secret stays on the server |
+| `CALL_ANALYSIS_WINDOW_SECONDS` / `CALL_ANALYSIS_STEP_SECONDS` | `12` / `5` | Live analysis window and how much new audio triggers the next one |
+| `CALL_MAX_ROOMS` / `CALL_RECONNECT_GRACE_SECONDS` | `200` / `20` | Live Call room cap, and how long a dropped participant keeps their place |
+| `CALL_MAX_ROOMS_PER_CLIENT` | `10` | Empty rooms one client address may hold. Behind a proxy, set `FORWARDED_ALLOW_IPS` so this is per visitor, not per proxy |
+| `CALL_ANALYSIS_DELAY_SECONDS` | `20` | After this, a running live analysis is shown to the listener as delayed |
+
+**Live calls need WebSockets and a single API worker.** The call socket lives at `/api/v1/calls/{room}/ws`. The bundled
+`nginx.conf` forwards the WebSocket upgrade for that path; any other proxy or load balancer in front of the API must do the
+same and allow idle connections of at least a minute (the browser pings every 20 s). Rooms are kept in the API process's
+memory, so run one worker (the image does) or pin both participants of a room to the same instance. When the web app and
+API are on different hosts (Option A), the socket URL is derived from `VITE_API_BASE_URL` (`https` becomes `wss`), and the
+API checks the socket's `Origin` against `VOXSHIELD_CORS_ORIGINS` / `VOXSHIELD_CORS_ORIGIN_REGEX`. Browsers allow the
+microphone and WebRTC only on https pages (or localhost). For calls between arbitrary networks, run a TURN server.
+A restart or redeploy of the API ends every live call in progress (rooms are in memory); participants are told to start a new call.
 
 **Rate limiting and proxies.** The limit is per client address. Behind a proxy every visitor looks like the proxy unless
 `FORWARDED_ALLOW_IPS` lists it, in which case the real address from `X-Forwarded-For` is used. Never set it to `*` on an

@@ -103,3 +103,22 @@ export async function analyzeAudio(
   if (!report) throw new ApiError('no_report', 'The analysis ended without a result.')
   return report
 }
+
+export interface CallRoom {
+  room_id: string
+  max_participants: number
+  idle_expiry_seconds: number
+}
+
+/** Creates a private two-person call room. The room ID is the invitation, so it is shared only with the other person. */
+export const createCallRoom = (signal?: AbortSignal) => request<CallRoom>('/calls', { method: 'POST', signal })
+
+/** The call's WebSocket address, next to the API: same host in development (Vite proxies it), wss:// for an https API. */
+export function callSocketUrl(roomId: string, base: string = API_BASE, page: string = typeof window === 'undefined' ? 'http://localhost/' : window.location.href): string {
+  const url = new URL(base, page)
+  url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:'
+  url.pathname = `${url.pathname.replace(/\/$/, '')}/calls/${encodeURIComponent(roomId)}/ws`
+  url.search = ''
+  url.hash = ''
+  return url.toString()
+}

@@ -83,6 +83,41 @@ class Settings(BaseSettings):
     scam_nli_protective_strict_threshold: float = 0.95
     scam_nli_sender_threshold: float = 0.85
 
+    # ---- Live calls (browser-to-browser, analysed while they happen) ----
+    # Rooms live in this process's memory only, so run a single API worker when calls are used.
+    call_max_rooms: int = 200
+    # Empty rooms (nobody in them) one client address may hold at once, so one visitor cannot use up the server-wide cap
+    # by creating rooms and abandoning them. Rooms in use do not count: behind a proxy without forwarded headers every
+    # visitor shares one address, and real calls must never be blocked by this.
+    call_max_rooms_per_client: int = 10
+    # A room nobody has joined, or that everyone has left, is removed after this long.
+    call_room_idle_seconds: float = 600
+    # How long a participant whose connection dropped keeps their place before the other side is told they left.
+    call_reconnect_grace_seconds: float = 20
+    # Each analysis reads the last `window` seconds of the other person's audio, at most every `step` seconds of new
+    # audio. 12 s gives Whisper whole sentences and the voice model two 6 s windows; 5 s new audio bounds alert latency
+    # at roughly step + inference time. Windows overlap, and repeated findings are not alerted twice.
+    call_analysis_window_seconds: float = 12
+    call_analysis_step_seconds: float = 5
+    # Below this level (RMS of 16 kHz float audio) a window is treated as silence and not sent to the models.
+    call_silence_rms: float = 0.004
+    # Largest single audio frame accepted from a browser, and the largest burst above real time (the browser buffers up to
+    # about 8 s of audio while its connection stalls, then sends it at once).
+    call_max_frame_seconds: float = 2
+    call_max_ahead_seconds: float = 8
+    # After this long, a running analysis is reported to the listener as delayed (it is not cancelled: a model run in a
+    # worker thread cannot be interrupted safely).
+    call_analysis_delay_seconds: float = 20
+    # A finding of the same kind is not alerted again within this many seconds unless the risk level rises.
+    call_alert_cooldown_seconds: float = 45
+    # ICE servers handed to call participants. STUN is enough on most home networks; TURN relays media when a direct
+    # path cannot be found (strict NAT, many corporate networks). With turn_secret set, short-lived credentials are
+    # issued per participant using the TURN REST convention (coturn: use-auth-secret / static-auth-secret).
+    call_stun_urls: list[str] = ["stun:stun.l.google.com:19302"]
+    turn_urls: list[str] = []
+    turn_secret: str | None = None
+    turn_credential_ttl_seconds: int = 3600
+
     @property
     def effective_scam_revision(self) -> str | None:
         if self.scam_model_id == DEFAULT_SCAM_MODEL_ID:

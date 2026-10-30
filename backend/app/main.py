@@ -9,7 +9,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import analysis, health, models, uploads
+from app.api import analysis, calls, health, models, uploads
 from app.config import get_settings
 from app.middleware import ApiGuard
 
@@ -65,6 +65,7 @@ async def lifespan(app: FastAPI):
     if get_settings().preload_models:
         threading.Thread(target=_preload, daemon=True).start()
     yield
+    calls.get_registry().close_all()  # drop every live call's audio buffer
 
 
 def create_app() -> FastAPI:
@@ -88,7 +89,7 @@ def create_app() -> FastAPI:
     # Added last, so it is the outermost layer: floods and oversized bodies are turned away before anything else runs.
     app.add_middleware(ApiGuard, max_upload_bytes=settings.max_upload_bytes, requests_per_minute=settings.rate_limit_per_minute)
 
-    for router in (health.router, uploads.router, analysis.router, models.router):
+    for router in (health.router, uploads.router, analysis.router, models.router, calls.router):
         app.include_router(router, prefix="/api/v1")
     return app
 

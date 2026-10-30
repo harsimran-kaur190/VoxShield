@@ -16,7 +16,7 @@ Send = Callable[[Message], Awaitable[None]]
 logger = logging.getLogger("voxshield.guard")
 
 BODY_OVERHEAD_BYTES = 1024 * 1024
-LIMITED_PREFIXES = ("/api/v1/analysis", "/api/v1/uploads")
+LIMITED_PREFIXES = ("/api/v1/analysis", "/api/v1/uploads", "/api/v1/calls")
 
 
 class SlidingWindowLimiter:

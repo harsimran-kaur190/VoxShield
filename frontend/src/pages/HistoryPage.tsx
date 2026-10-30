@@ -9,6 +9,7 @@ import { useHistory } from '../hooks/useHistory'
 import { DEMO_CALL_PATH } from '../lib/callSimulation'
 import { formatTimestamp } from '../lib/highlight'
 import { clearHistory, formatCompletedAt, HISTORY_NOTICE, reportPath, type HistoryEntry } from '../lib/history'
+import { formatClock, highestScamLevel, RISK_VIEW } from '../lib/liveCall/view'
 import { INTENT_VIEW, VOICE_VIEW } from '../lib/views'
 
 const STATUS = { complete: 'Complete', partial: 'Partial results', failed: 'Analysis failed' } as const
@@ -70,7 +71,13 @@ function HistoryRow({ entry }: { entry: HistoryEntry }) {
     <article className="flex flex-col gap-4 rounded-card border border-line bg-card p-5 shadow-card sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
-          {entry.kind === 'simulation' ? <SimulatedBadge>Simulation</SimulatedBadge> : <Badge tone="info">{entry.source === 'lab' ? 'Real analysis · Lab sample' : 'Real analysis'}</Badge>}
+          {entry.kind === 'simulation' ? (
+            <SimulatedBadge>Simulation</SimulatedBadge>
+          ) : entry.kind === 'live-call' ? (
+            <Badge tone="info">Real analysis · Live call</Badge>
+          ) : (
+            <Badge tone="info">{entry.source === 'lab' ? 'Real analysis · Lab sample' : 'Real analysis'}</Badge>
+          )}
           <span className="font-mono text-xs text-ink-3">{entry.id}</span>
           <span className="text-xs text-ink-3">{formatCompletedAt(entry.completedAt)}</span>
         </div>
@@ -83,6 +90,12 @@ function HistoryRow({ entry }: { entry: HistoryEntry }) {
             {/* Two separate results, never combined. */}
             <Result label="Scam intent" value={INTENT_VIEW[entry.report.intent.risk].label} dot={INTENT_VIEW[entry.report.intent.risk].dot} />
             <Result label="Voice" value={VOICE_VIEW[entry.report.voice.verdict].label} dot={VOICE_VIEW[entry.report.voice.verdict].dot} />
+          </dl>
+        ) : entry.kind === 'live-call' ? (
+          <dl className="mt-1 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+            <Result label="Duration" value={formatClock(entry.durationSeconds)} />
+            <Result label="Alerts" value={String(entry.alerts.length)} />
+            <Result label="Highest scam risk" value={RISK_VIEW[highestScamLevel(entry.alerts)].label} />
           </dl>
         ) : (
           <p className="mt-1 text-sm text-ink-2">
