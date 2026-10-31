@@ -1,4 +1,5 @@
 import { ArrowRight, AudioLines, History, Info, PhoneIncoming, Trash2 } from 'lucide-react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { Badge, SimulatedBadge } from '../components/ui/Badge'
@@ -8,14 +9,17 @@ import { buttonClass } from '../components/ui/styles'
 import { useHistory } from '../hooks/useHistory'
 import { DEMO_CALL_PATH } from '../lib/callSimulation'
 import { formatTimestamp } from '../lib/highlight'
-import { clearHistory, formatCompletedAt, HISTORY_NOTICE, reportPath, type HistoryEntry } from '../lib/history'
+import { clearHistory, formatCompletedAt, HISTORY_NOTICE, reportPath, type HistoryEntry, type HistorySource } from '../lib/history'
+import { filterBySource, SOURCE_FILTERS, SOURCE_LABEL } from '../lib/historyFilter'
 import { formatClock, highestScamLevel, RISK_VIEW } from '../lib/liveCall/view'
 import { INTENT_VIEW, VOICE_VIEW } from '../lib/views'
 
 const STATUS = { complete: 'Complete', partial: 'Partial results', failed: 'Analysis failed' } as const
 
 export function HistoryPage() {
-  const entries = useHistory()
+  const all = useHistory()
+  const [source, setSource] = useState<HistorySource | 'all'>('all')
+  const entries = filterBySource(all, source)
   return (
     <div className="space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
@@ -35,7 +39,19 @@ export function HistoryPage() {
         {HISTORY_NOTICE}
       </p>
 
-      {entries.length === 0 ? (
+      {all.length > 0 && (
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by source">
+          {SOURCE_FILTERS.map((option) => (
+            <Button key={option.value} variant={option.value === source ? 'primary' : 'secondary'} size="sm" aria-pressed={option.value === source} onClick={() => setSource(option.value)}>
+              {option.label}
+            </Button>
+          ))}
+        </div>
+      )}
+
+      {all.length > 0 && entries.length === 0 ? (
+        <p className="text-sm text-ink-3">No {SOURCE_FILTERS.find((o) => o.value === source)?.label.toLowerCase()} in this tab's history.</p>
+      ) : entries.length === 0 ? (
         <EmptyState
           icon={History}
           title="No completed analyses yet"
@@ -76,7 +92,7 @@ function HistoryRow({ entry }: { entry: HistoryEntry }) {
           ) : entry.kind === 'live-call' ? (
             <Badge tone="info">Real analysis · Live call</Badge>
           ) : (
-            <Badge tone="info">{entry.source === 'lab' ? 'Real analysis · Lab sample' : 'Real analysis'}</Badge>
+            <Badge tone="info">{SOURCE_LABEL[entry.source]}</Badge>
           )}
           <span className="font-mono text-xs text-ink-3">{entry.id}</span>
           <span className="text-xs text-ink-3">{formatCompletedAt(entry.completedAt)}</span>
@@ -90,6 +106,13 @@ function HistoryRow({ entry }: { entry: HistoryEntry }) {
             {/* Two separate results, never combined. */}
             <Result label="Scam intent" value={INTENT_VIEW[entry.report.intent.risk].label} dot={INTENT_VIEW[entry.report.intent.risk].dot} />
             <Result label="Voice" value={VOICE_VIEW[entry.report.voice.verdict].label} dot={VOICE_VIEW[entry.report.voice.verdict].dot} />
+          </dl>
+        ) : entry.kind === 'deeptruth' ? (
+          <dl className="mt-1 flex flex-wrap gap-x-5 gap-y-1 text-sm">
+            <Result label="Status" value={STATUS[entry.report.status]} />
+            <Result label="Media" value={entry.report.media.kind} />
+            <Result label="Verdict" value={entry.report.verdict} />
+            {entry.pageUrl && <Result label="Found on" value={new URL(entry.pageUrl).hostname} />}
           </dl>
         ) : entry.kind === 'live-call' ? (
           <dl className="mt-1 flex flex-wrap gap-x-5 gap-y-1 text-sm">

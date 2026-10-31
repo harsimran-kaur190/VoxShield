@@ -69,3 +69,10 @@ Thumbs.db
 !.vscode/extensions.json
 *.swp
 *.swo
+
+# DeepTruth: MediaPipe face landmarker, downloaded on first use
+backend/models/
+backend/evaluation/cache/images/
+
+# ---- DeepTruth image eval set (rebuilt by eval/fetch_images.py) ----
+backend/eval/images/

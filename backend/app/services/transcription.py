@@ -1,6 +1,7 @@
 import logging
 import threading
 import time
+import unicodedata
 from collections.abc import Callable
 from typing import Any
 
@@ -11,8 +12,50 @@ from app.services.languages import MISMATCH_SCORE, language_name
 
 logger = logging.getLogger("voxshield.transcription")
 
+SUPPORTED_LANGUAGES = ("en", "hi")
 SILENCE_NO_SPEECH_PROB = 0.6
 SILENCE_AVG_LOGPROB = -1.0
+
+
+def _script_of(ch: str) -> str:
+    name = unicodedata.name(ch, "")
+    for script in ("LATIN", "DEVANAGARI", "GURMUKHI", "ARABIC", "CJK", "HIRAGANA", "KATAKANA", "HANGUL", "CYRILLIC"):
+        if name.startswith(script):
+            return script
+    return "OTHER"
+
+
+# Scripts a segment may be written in for a language. Whisper on music or noise tends to emit short, repeated lines in an
+# unrelated script (for example Chinese words or stray combining marks during a Hindi or English call).
+_ALLOWED_SCRIPTS = {
+    "en": {"LATIN"},
+    "hi": {"DEVANAGARI", "GURMUKHI", "ARABIC", "LATIN"},  # Punjabi and Urdu are often heard as Hindi
+    "pa": {"GURMUKHI", "DEVANAGARI", "ARABIC", "LATIN"},
+    "ur": {"ARABIC", "LATIN"},
+}
+_REPEAT_LIMIT = 3
+
+
+def _drop_hallucinations(kept: list[Any], language: str | None) -> list[Any]:
+    """Drop segments that are almost certainly Whisper hallucinations rather than speech: no real letters (only marks or
+    symbols), a script that cannot belong to the language, or a short line repeated again and again."""
+    allowed = _ALLOWED_SCRIPTS.get(language or "")
+    clean: list[Any] = []
+    for seg in kept:
+        text = seg.text.strip()
+        letters = [ch for ch in text if unicodedata.category(ch).startswith("L")]
+        if len(letters) < 2:
+            continue
+        if allowed:
+            in_script = sum(1 for ch in letters if _script_of(ch) in allowed)
+            if in_script / len(letters) < 0.5:
+                continue
+        clean.append(seg)
+    counts: dict[str, int] = {}
+    for seg in clean:
+        key = seg.text.strip().lower()
+        counts[key] = counts.get(key, 0) + 1
+    return [s for s in clean if not (len(s.text.strip()) <= 30 and counts[s.text.strip().lower()] >= _REPEAT_LIMIT)]
 
 
 def _default_factory(settings: Settings) -> Any:
@@ -73,6 +116,16 @@ class FasterWhisperTranscriber:
             logger.error("Language check failed: %s", type(error).__name__)
             return None
 
+    def _closest_supported(self, model: Any, audio: Audio16k) -> str:
+        try:
+            with self._lock:
+                _, _, probs = model.detect_language(audio)
+            scores = {code: float(p) for code, p in probs if code in SUPPORTED_LANGUAGES}
+            return max(scores, key=scores.get) if scores else "en"
+        except Exception as error:
+            logger.error("Language check failed: %s", type(error).__name__)
+            return "en"
+
     def _run(self, model: Any, audio: Audio16k, language: str | None, task: str) -> tuple[list[Any], Any]:
         """One Whisper pass, with silent or hallucinated segments dropped."""
         try:
@@ -96,7 +149,7 @@ class FasterWhisperTranscriber:
             for s in raw
             if s.text.strip() and not (s.no_speech_prob > SILENCE_NO_SPEECH_PROB and s.avg_logprob < SILENCE_AVG_LOGPROB)
         ]
-        return kept, info
+        return _drop_hallucinations(kept, language or getattr(info, "language", None)), info
 
     @staticmethod
     def _segments(kept: list[Any]) -> tuple[list[TranscriptSegment], list[str]]:
@@ -154,6 +207,14 @@ class FasterWhisperTranscriber:
         model = self.ensure_loaded()
         selected = language or self._settings.whisper_language
         kept, info = self._run(model, audio, selected, "transcribe")
+        if selected is None and info.language not in SUPPORTED_LANGUAGES:
+            # Only English and Hindi are supported: redo the pass in whichever of the two the model finds likelier,
+            # instead of keeping a wrong-language guess (the usual source of garbage text on music or noise).
+            selected_by_model = self._closest_supported(model, audio)
+            kept, info = self._run(model, audio, selected_by_model, "transcribe")
+            forced = selected_by_model
+        else:
+            forced = None
         if not kept:
             return TranscriptResult(
                 status="no_speech",
@@ -184,8 +245,8 @@ class FasterWhisperTranscriber:
         return TranscriptResult(
             status="ok",
             text=" ".join(parts),
-            language=selected or info.language,
-            language_probability=None if selected else round(float(info.language_probability), 3),
+            language=selected or forced or info.language,
+            language_probability=None if (selected or forced) else round(float(info.language_probability), 3),
             language_source="selected" if selected else "detected",
             detected_language=detected[0] if detected else None,
             detected_language_score=round(detected[1], 3) if detected else None,

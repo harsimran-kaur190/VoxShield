@@ -9,11 +9,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import analysis, calls, health, models, uploads
+from app.api import analysis, calls, deeptruth, health, models, uploads
 from app.config import get_settings
 from app.middleware import ApiGuard
 
 logger = logging.getLogger("voxshield")
+# Without this, the app's own INFO lines (for example "image classifier ... ran") never reach the uvicorn console:
+# Python's fallback handler prints WARNING and above only.
+if not logging.getLogger().handlers:
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s:     %(name)s: %(message)s")
 
 
 def _preload() -> None:
@@ -25,6 +29,7 @@ def _preload() -> None:
         import torch  # noqa: F401
         import transformers  # noqa: F401
         from transformers import AutoFeatureExtractor, AutoModelForAudioClassification, AutoModelForSequenceClassification, AutoTokenizer  # noqa: F401
+        from transformers import AutoImageProcessor, AutoModelForImageClassification, CLIPImageProcessor, CLIPVisionModelWithProjection  # noqa: F401  (DeepTruth)
     except Exception as error:
         logger.error("Could not import the model libraries: %s", type(error).__name__)
 
@@ -38,6 +43,11 @@ def _preload() -> None:
     loaders = [("speech-to-text", services.transcriber.ensure_loaded), ("voice", services.voice.ensure_loaded)]
     if hasattr(services.intent, "ensure_loaded"):
         loaders.append(("scam-intent", services.intent.ensure_loaded))
+    from app.deeptruth.dependencies import get_image_components
+
+    image = get_image_components()
+    loaders.append(("face-landmarks", image.faces.ensure_loaded))
+    loaders.extend((f"image-{i + 1}", clf.ensure_loaded) for i, clf in enumerate(image.classifiers))
     threads = [threading.Thread(target=load, args=(name, loader), daemon=True) for name, loader in loaders]
     for thread in threads:
         thread.start()
@@ -82,14 +92,19 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
-        allow_origin_regex=settings.cors_origin_regex,
+        allow_origin_regex=settings.cors_regex,
         allow_methods=["GET", "POST"],
         allow_headers=["Content-Type"],
     )
     # Added last, so it is the outermost layer: floods and oversized bodies are turned away before anything else runs.
-    app.add_middleware(ApiGuard, max_upload_bytes=settings.max_upload_bytes, requests_per_minute=settings.rate_limit_per_minute)
+    app.add_middleware(
+        ApiGuard,
+        max_upload_bytes=settings.max_upload_bytes,
+        requests_per_minute=settings.rate_limit_per_minute,
+        upload_overrides={"/api/v1/deeptruth": settings.deeptruth_max_upload_bytes},
+    )
 
-    for router in (health.router, uploads.router, analysis.router, models.router, calls.router):
+    for router in (health.router, uploads.router, analysis.router, models.router, calls.router, deeptruth.router):
         app.include_router(router, prefix="/api/v1")
     return app
 

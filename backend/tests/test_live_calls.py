@@ -172,6 +172,17 @@ def test_overlapping_windows_do_not_repeat_the_same_alert():
         assert not [m for m in seen + rest if m["type"] == "alert"]
 
 
+def test_the_last_sentence_before_a_pause_is_released_not_held_forever():
+    committer = TranscriptCommitter(window_seconds=12, step_seconds=5)
+    segments = [{"start": 0.0, "end": 4.0, "text": "First sentence."}, {"start": 6.0, "end": 11.5, "text": "Read me the code now."}]
+    assert [s["text"] for s in committer.commit(segments, window_end=12.0, window_start=0.0)] == ["First sentence."]
+    assert committer.held is not None  # cut at the window edge, so held for the next window
+    assert [s["text"] for s in committer.release_held()] == ["Read me the code now."]
+    assert committer.held is None and committer.release_held() == []
+    # a later window does not repeat the released sentence
+    assert committer.commit([{"start": 6.0, "end": 11.5, "text": "Read me the code now."}], window_end=17.0, window_start=5.0) == []
+
+
 def test_silence_is_not_sent_to_the_models():
     transcriber = CountingTranscriber(transcript_of(SCAM))
     use(transcriber)

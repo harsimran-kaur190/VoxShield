@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 
+import { ImageEvaluation } from '../components/evaluation/ImageEvaluation'
 import { getModels } from '../lib/api'
 import type { ModelsResponse } from '../lib/types'
 
@@ -41,6 +42,7 @@ const SECTIONS = [
   ['models', 'Models'],
   ['published', 'Published metrics'],
   ['own', 'VoxShield evaluation'],
+  ['image', 'Image detector (DeepTruth)'],
   ['limits', 'Known limitations'],
   ['privacy', 'Privacy'],
 ] as const
@@ -182,6 +184,10 @@ export function AboutPage() {
             <p className="mt-3 text-sm text-ink-3">
               With this few examples the F1 difference has a wide 95% interval (+0.12 to +0.47 in favour of the language model). Full method, confidence intervals, and error analysis are in <code className="font-mono text-xs">backend/evaluation/RESULTS.md</code>.
             </p>
+          </Section>
+
+          <Section id="image" title="Image detector (DeepTruth)">
+            <ImageEvaluation />
           </Section>
 
           <Section id="limits" title="Known limitations">

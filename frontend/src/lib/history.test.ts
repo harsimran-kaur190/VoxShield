@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { englishReport } from '../test-utils/reports'
-import { addEntry, clearHistory, getEntries, getEntry, HISTORY_LIMIT, latestSimulation, subscribe } from './history'
+import type { DeepTruthReport } from './deeptruth'
+import { addEntry, clearHistory, entrySource, getEntries, getEntry, HISTORY_LIMIT, latestSimulation, subscribe } from './history'
 
 afterEach(clearHistory)
 
@@ -46,5 +47,36 @@ describe('session history', () => {
     stop()
     addEntry(simulation)
     expect(listener).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('DeepTruth entries and the source filter', () => {
+  const report: DeepTruthReport = {
+    verdict: 'No manipulation detected',
+    verdict_reason: '',
+    disagreement: null,
+    manipulation_likelihood: 0.2,
+    confidence: 0.7,
+    modules: [],
+    limitations: [],
+    media: { filename: 'photo.jpg', kind: 'image', format: 'jpeg', size_bytes: 10, duration_seconds: null, width: 10, height: 10, has_audio: null, has_video: null },
+    status: 'complete',
+    timings_seconds: {},
+    notice: '',
+  }
+
+  it('stores DeepTruth results from the page and the extension with their own ID prefix and source', () => {
+    const page = addEntry({ kind: 'deeptruth', source: 'upload', title: 'photo.jpg', report })
+    const ext = addEntry({ kind: 'deeptruth', source: 'extension', title: 'photo.jpg', pageUrl: 'https://news.example/story', report })
+    expect(page.id).toMatch(/^DT-/)
+    expect(entrySource(page)).toBe('upload')
+    expect(entrySource(ext)).toBe('extension')
+    expect(getEntry(ext.id)).toMatchObject({ kind: 'deeptruth', pageUrl: 'https://news.example/story' })
+  })
+
+  it('old record kinds have no source, so a source filter only ever shows them under "all"', () => {
+    addEntry(simulation)
+    expect(entrySource(getEntries()[0])).toBeNull()
+    expect(entrySource(addEntry({ kind: 'analysis', source: 'lab', title: 'Sample', report: englishReport() }))).toBe('lab')
   })
 })

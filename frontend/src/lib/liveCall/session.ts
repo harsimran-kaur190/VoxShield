@@ -59,6 +59,7 @@ const LOCAL_FRAME_SECONDS = 0.1
 const OWN_VOICE_RATE = 16_000
 const OWN_VOICE =
   'Your own voice is coming back through the other person’s audio (the same microphone, or speakers without headphones). VoxShield leaves those moments out of the analysis, so your words are not shown as theirs. Use headphones or separate devices.'
+const MIC_LOST = 'Your microphone stopped working (it was unplugged or its permission was removed), so the other person can no longer hear you. End the call, check the microphone and join again.'
 const OPEN = 1 // WebSocket.OPEN
 
 const SERVER_LOST =
@@ -233,9 +234,21 @@ export class CallSession {
       return this.fail(micError(error))
     }
     if (this.finished) return this.releaseMedia() // cancelled while the permission prompt was open
+    this.watchMicrophone(this.local)
     this.set({ startStep: 'signaling' })
     this.connect()
     void this.startOwnVoiceReference()
+  }
+
+  /** An unplugged or revoked microphone ends its track. Say so: the other person can no longer hear this participant. */
+  private watchMicrophone(stream: MediaStream) {
+    stream.getAudioTracks().forEach((track) => {
+      track.onended = () => {
+        if (this.finished || this.local !== stream) return
+        this.noteIssue(MIC_LOST)
+        this.set({ warning: MIC_LOST })
+      }
+    })
   }
 
   /**
@@ -379,6 +392,9 @@ export class CallSession {
           analysis: { ...s.analysis, runs: s.analysis.runs + 1, last: message, lastAt: this.env.now() },
         }))
       }
+      case 'transcript':
+        if (this.isOwnSpeech(message.source_participant_id)) return
+        return this.set((s) => ({ transcript: [...s.transcript, ...message.transcript.map((line) => ({ ...line, source: message.source_participant_id ?? null }))] }))
       case 'alert':
         if (this.isOwnSpeech(message.alert.source_participant_id)) return
         if (this.snapshot.alerts.some((alert) => alert.id === message.alert.id)) return
@@ -690,7 +706,10 @@ export class CallSession {
     this.localCapture?.stop()
     this.localCapture = null
     this.ownVoice.clear()
-    this.local?.getTracks().forEach((track) => track.stop())
+    this.local?.getTracks().forEach((track) => {
+      track.onended = null
+      track.stop()
+    })
     this.local = null
     void this.context?.close().catch(() => undefined)
     this.context = null

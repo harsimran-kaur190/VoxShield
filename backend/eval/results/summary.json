@@ -1,0 +1,172 @@
+{
+ "generated_at": "2026-10-31 17:20",
+ "detector": [
+  "UnivFD (CLIP ViT-L/14 + linear probe)"
+ ],
+ "dataset": {
+  "total": 360,
+  "calibration": 180,
+  "test": 180,
+  "test_real": 90,
+  "test_fake": 90,
+  "sources": [
+   {
+    "key": "faces",
+    "name": "FFHQ photos vs StyleGAN faces (2019)",
+    "dataset": "TheKernel01/140k-Real-and-Fake-Faces",
+    "licence": "CC"
+   },
+   {
+    "key": "elsa",
+    "name": "web photos vs Stable Diffusion / DeepFloyd (2023)",
+    "dataset": "elsaEU/ELSA_D3",
+    "licence": "research use"
+   },
+   {
+    "key": "openfake",
+    "name": "ImageNet & DOCCI photos vs 2025 generators",
+    "dataset": "ComplexDataLab/OpenFake (core, test split)",
+    "licence": "CC BY-NC 4.0"
+   }
+  ]
+ },
+ "main": {
+  "name": "baseline",
+  "transform": null,
+  "accuracy": 0.628,
+  "precision_fake": 0.662,
+  "recall_fake": 0.522,
+  "specificity_real": 0.733,
+  "auc": 0.69,
+  "confusion": {
+   "tp": 47,
+   "fp": 24,
+   "tn": 66,
+   "fn": 43
+  },
+  "verdicts": {
+   "real": {
+    "Likely authentic": 56,
+    "Inconclusive": 18,
+    "Likely manipulated": 16
+   },
+   "fake": {
+    "Likely authentic": 32,
+    "Likely manipulated": 40,
+    "Inconclusive": 18
+   }
+  },
+  "n": 180
+ },
+ "baseline": null,
+ "by_source": {
+  "elsa": {
+   "name": "web photos vs Stable Diffusion / DeepFloyd (2023)",
+   "n": 40,
+   "accuracy": 0.775,
+   "recall_fake": 0.55,
+   "specificity_real": 1.0,
+   "auc": 0.835
+  },
+  "faces": {
+   "name": "FFHQ photos vs StyleGAN faces (2019)",
+   "n": 60,
+   "accuracy": 0.7,
+   "recall_fake": 0.733,
+   "specificity_real": 0.667,
+   "auc": 0.817
+  },
+  "openfake": {
+   "name": "ImageNet & DOCCI photos vs 2025 generators",
+   "n": 80,
+   "accuracy": 0.5,
+   "recall_fake": 0.35,
+   "specificity_real": 0.65,
+   "auc": 0.519
+  }
+ },
+ "by_generator": {
+  "deepfloyd-if": {
+   "name": "DeepFloyd IF",
+   "n": 5,
+   "detected": 1
+  },
+  "ernie-image-turbo": {
+   "name": "ernie-image-turbo",
+   "n": 1,
+   "detected": 0
+  },
+  "flux.2-klein-9b": {
+   "name": "flux.2-klein-9b",
+   "n": 6,
+   "detected": 2
+  },
+  "gpt-image-1.5": {
+   "name": "gpt-image-1.5",
+   "n": 5,
+   "detected": 4
+  },
+  "gpt-image-2": {
+   "name": "gpt-image-2",
+   "n": 2,
+   "detected": 1
+  },
+  "illustrious": {
+   "name": "illustrious",
+   "n": 6,
+   "detected": 2
+  },
+  "lumina-17-2-25": {
+   "name": "lumina-17-2-25",
+   "n": 1,
+   "detected": 0
+  },
+  "midjourney-7": {
+   "name": "midjourney-7",
+   "n": 6,
+   "detected": 3
+  },
+  "recraft-v3": {
+   "name": "recraft-v3",
+   "n": 2,
+   "detected": 0
+  },
+  "sd-1.4": {
+   "name": "Stable Diffusion 1.4",
+   "n": 5,
+   "detected": 2
+  },
+  "sd-2.1": {
+   "name": "Stable Diffusion 2.1",
+   "n": 5,
+   "detected": 3
+  },
+  "sd-xl": {
+   "name": "Stable Diffusion XL",
+   "n": 5,
+   "detected": 5
+  },
+  "stylegan": {
+   "name": "StyleGAN faces",
+   "n": 30,
+   "detected": 22
+  },
+  "veo-3": {
+   "name": "veo-3",
+   "n": 1,
+   "detected": 0
+  },
+  "wan-video-2.5": {
+   "name": "wan-video-2.5",
+   "n": 4,
+   "detected": 0
+  },
+  "z-image-turbo": {
+   "name": "z-image-turbo",
+   "n": 6,
+   "detected": 2
+  }
+ },
+ "robustness": [],
+ "where_it_fails": "On the held-out test half (180 images) the detector got 63% right: it caught 52% of the AI images and wrongly flagged 27% of the real photos. It is weakest on ImageNet & DOCCI photos vs 2025 generators: 50% accuracy, AUC 0.519. The generators it misses most often are wan-video-2.5 (0 of 4 caught), DeepFloyd IF (1 of 5 caught), flux.2-klein-9b (2 of 6 caught). 36 of 180 test images came back Inconclusive by design, where the score sat too close to the decision point. None of this covers face swaps or local edits of a real photo, which these detectors were not trained to find."
+}

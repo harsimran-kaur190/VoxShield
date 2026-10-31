@@ -16,7 +16,7 @@ Send = Callable[[Message], Awaitable[None]]
 logger = logging.getLogger("voxshield.guard")
 
 BODY_OVERHEAD_BYTES = 1024 * 1024
-LIMITED_PREFIXES = ("/api/v1/analysis", "/api/v1/uploads", "/api/v1/calls")
+LIMITED_PREFIXES = ("/api/v1/analysis", "/api/v1/uploads", "/api/v1/calls", "/api/v1/deeptruth")
 
 
 class SlidingWindowLimiter:
@@ -66,11 +66,23 @@ class ApiGuard:
     Unexpected errors are answered here too, so they carry the same headers and are logged by class name only.
     """
 
-    def __init__(self, app: Callable[[Scope, Receive, Send], Awaitable[None]], max_upload_bytes: int, requests_per_minute: int):
+    def __init__(
+        self,
+        app: Callable[[Scope, Receive, Send], Awaitable[None]],
+        max_upload_bytes: int,
+        requests_per_minute: int,
+        upload_overrides: dict[str, int] | None = None,
+    ):
         self.app = app
-        self.max_body = max_upload_bytes + BODY_OVERHEAD_BYTES
-        self.max_upload_mb = max_upload_bytes // (1024 * 1024)
+        self.max_upload_bytes = max_upload_bytes
+        # Path prefix -> upload limit in bytes, for routes that accept larger files (DeepTruth videos).
+        self.upload_overrides = upload_overrides or {}
         self.limiter = SlidingWindowLimiter(requests_per_minute)
+
+    def _limit_for(self, path: str) -> tuple[int, int]:
+        """(largest accepted body in bytes, upload limit in MB for the error message) for this path."""
+        upload = next((limit for prefix, limit in self.upload_overrides.items() if path.startswith(prefix)), self.max_upload_bytes)
+        return upload + BODY_OVERHEAD_BYTES, upload // (1024 * 1024)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
@@ -78,6 +90,7 @@ class ApiGuard:
             return
         path, method = scope["path"], scope["method"]
         headers = {k.lower(): v for k, v in scope["headers"]}
+        max_body, max_upload_mb = self._limit_for(path)
 
         if method == "POST" and path.startswith(LIMITED_PREFIXES):
             client = (scope.get("client") or ("unknown", 0))[0]
@@ -89,8 +102,8 @@ class ApiGuard:
                 await send(body)
                 return
             declared = headers.get(b"content-length", b"")
-            if declared.isdigit() and int(declared) > self.max_body:
-                start, body = _json(413, "file_too_large", f"File exceeds the {self.max_upload_mb} MB limit.", [(b"cache-control", b"no-store")])
+            if declared.isdigit() and int(declared) > max_body:
+                start, body = _json(413, "file_too_large", f"File exceeds the {max_upload_mb} MB limit.", [(b"cache-control", b"no-store")])
                 await send(start)
                 await send(body)
                 return
@@ -110,11 +123,11 @@ class ApiGuard:
             message = await receive()
             if message["type"] == "http.request" and method == "POST" and path.startswith(LIMITED_PREFIXES):
                 body["received"] += len(message.get("body", b""))
-                if body["received"] > self.max_body:
+                if body["received"] > max_body:
                     # Stop reading: answer now and tell the application the client is gone, so nothing more is spooled.
                     body["rejected"] = True
                     if not state["started"]:
-                        await respond(413, "file_too_large", f"File exceeds the {self.max_upload_mb} MB limit.")
+                        await respond(413, "file_too_large", f"File exceeds the {max_upload_mb} MB limit.")
                     return {"type": "http.disconnect"}
             return message
 

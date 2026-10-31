@@ -1,3 +1,4 @@
+import type { DeepTruthReport } from './deeptruth'
 import type { LiveAlert, TranscriptLine } from './liveCall/types'
 import type { SimulationStatus } from './liveSimulation'
 import type { AnalysisReport } from './types'
@@ -60,15 +61,35 @@ export interface LiveCallEntry extends BaseEntry {
   limitations: string[]
 }
 
-export type HistoryEntry = AnalysisEntry | SimulationEntry | LiveCallEntry
-type NewEntry = Omit<AnalysisEntry, 'id' | 'completedAt'> | Omit<SimulationEntry, 'id' | 'completedAt'> | Omit<LiveCallEntry, 'id' | 'completedAt'>
+/** Where a piece of media came from. 'extension' is the VoxShield Check browser extension checking media on another site. */
+export type HistorySource = 'upload' | 'lab' | 'extension'
+
+/** A DeepTruth (image, audio or video) result, from the DeepTruth page or the browser extension. */
+export interface DeepTruthEntry extends BaseEntry {
+  kind: 'deeptruth'
+  source: Extract<HistorySource, 'upload' | 'extension'>
+  /** The file name. */
+  title: string
+  /** The web page the extension found the media on; absent for uploads. */
+  pageUrl?: string
+  /** The extension's own ID for this result, so the same result is not added twice and its link can find it. */
+  externalId?: string
+  /** The backend's response, exactly as returned. */
+  report: DeepTruthReport
+}
+
+export type HistoryEntry = AnalysisEntry | SimulationEntry | LiveCallEntry | DeepTruthEntry
+type NewEntry = Omit<AnalysisEntry, 'id' | 'completedAt'> | Omit<SimulationEntry, 'id' | 'completedAt'> | Omit<LiveCallEntry, 'id' | 'completedAt'> | Omit<DeepTruthEntry, 'id' | 'completedAt'>
+
+/** The source of an entry, or null for simulations and live calls, which have none. Used by the History source filter. */
+export const entrySource = (entry: HistoryEntry): HistorySource | null => ('source' in entry ? entry.source : null)
 
 let entries: HistoryEntry[] = []
 const listeners = new Set<() => void>()
 let counter = 0
 
 function newId(kind: HistoryEntry['kind']): string {
-  const prefix = kind === 'analysis' ? 'AN' : kind === 'live-call' ? 'CALL' : 'SIM'
+  const prefix = kind === 'analysis' ? 'AN' : kind === 'live-call' ? 'CALL' : kind === 'deeptruth' ? 'DT' : 'SIM'
   const random = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID().slice(0, 8) : `${Date.now().toString(36)}${(counter++).toString(36)}`
   return `${prefix}-${random.toUpperCase()}`
 }
@@ -86,7 +107,9 @@ export function addEntry(entry: NewEntry, now: Date = new Date()): HistoryEntry 
 }
 
 export const getEntries = (): HistoryEntry[] => entries
-export const getEntry = (id: string | undefined): HistoryEntry | null => entries.find((entry) => entry.id === id) ?? null
+/** By browser-assigned ID, or by the extension's ID for results it sent over. */
+export const getEntry = (id: string | undefined): HistoryEntry | null =>
+  entries.find((entry) => entry.id === id || (entry.kind === 'deeptruth' && entry.externalId != null && entry.externalId === id)) ?? null
 export const latestSimulation = (): SimulationEntry | null => entries.find((entry): entry is SimulationEntry => entry.kind === 'simulation') ?? null
 
 export function clearHistory() {

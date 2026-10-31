@@ -259,6 +259,22 @@ describe('call session', () => {
     expect(finished).toHaveBeenCalledTimes(1)
   })
 
+  it('adds the sentence released before a pause to the transcript, attributed to the other person', async () => {
+    const t = await joined()
+    t.sockets[0].receive({ type: 'transcript', transcript: [{ start: 4.5, end: 11.5, text: 'Read me the code now.' }], source_participant_id: 'them' })
+    await flush()
+    expect(t.session.getSnapshot().transcript).toEqual([{ start: 4.5, end: 11.5, text: 'Read me the code now.', source: 'them' }])
+  })
+
+  it('tells the user when the microphone is unplugged or revoked mid-call, and keeps that for the report', async () => {
+    const t = await joined()
+    ;(t.track as { onended?: () => void }).onended?.()
+    const snapshot = t.session.getSnapshot()
+    expect(snapshot.warning).toMatch(/microphone stopped working/i)
+    expect(snapshot.issues.some((issue) => /microphone stopped working/i.test(issue))).toBe(true)
+    expect(snapshot.phase).toBe('in-call')
+  })
+
   it('closes the peer connection when the other person leaves, and waits for them', async () => {
     const t = await joined()
     t.sockets[0].receive({ type: 'peer-joined', peer_id: 'them' })

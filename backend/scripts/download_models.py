@@ -33,9 +33,21 @@ def main() -> None:
     for label, repo, revision in (
         ("voice authenticity", settings.voice_model_id, settings.effective_voice_revision),
         ("scam intent", settings.scam_model_id, settings.effective_scam_revision),
+        ("image detector backbone (UnivFD)", settings.univfd_clip_id, settings.univfd_clip_revision),
+        ("image detector (Swin-V2)", settings.swin_model_id, settings.swin_model_revision),
     ):
         print(f"{label}: {repo} @ {(revision or 'latest')[:8]}", flush=True)
         snapshot_download(repo, revision=revision, ignore_patterns=SKIP)
+
+    from app.deeptruth.modules.face_analysis import MediaPipeFaceFinder
+
+    print("face landmarks: MediaPipe Face Landmarker", flush=True)
+    MediaPipeFaceFinder(settings)._ensure_model_file()
+
+    from app.deeptruth.download import ensure_file
+
+    print("image detector head: UnivFD linear layer", flush=True)
+    ensure_file(Path(settings.univfd_fc_path), settings.univfd_fc_url, settings.univfd_fc_sha256)
 
     print(f"done in {time.perf_counter() - started:.0f} s")
 

@@ -9,3 +9,6 @@ av>=14
 faster-whisper>=1.1
 torch>=2.4
 transformers>=5.0
+pillow>=11
+opencv-python-headless>=4.10
+mediapipe>=0.10.14

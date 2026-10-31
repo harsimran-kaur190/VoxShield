@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local-network test certificate (scripts/make_lan_cert.sh)
+.certs

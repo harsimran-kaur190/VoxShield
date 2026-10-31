@@ -173,6 +173,14 @@ class TranscriptCommitter:
             self.committed_until = fresh[-1]["end"]
         return kept + fresh
 
+    def release_held(self) -> list[dict[str, Any]]:
+        """The held segment, kept as transcribed, when no later window will confirm it (the speaker went quiet)."""
+        held, self.held = self.held, None
+        if held is None:
+            return []
+        self.committed_until = max(self.committed_until, held["end"])
+        return [held]
+
 
 @dataclass
 class AlertTracker:
@@ -404,6 +412,11 @@ class LiveAnalyzer:
         audio, start, end = self.audio.window()
         if rms(audio[-int(new_audio * SAMPLE_RATE) :]) < self._settings.call_silence_rms:
             self._analyzed_until = end  # nothing new was said; do not spend a model run on it
+            # The last sentence before a pause is held back until a later window confirms it, and silence never runs one.
+            # Nothing follows it, so it is complete: release it instead of leaving it out of the transcript.
+            released = self.transcript.release_held()
+            if released:
+                await self._send({"type": "transcript", "transcript": released, "source_participant_id": self.source_id})
             await self._status_once("silence", "No speech heard from the other person in the last few seconds.")
             return
         release = self._admit()
@@ -448,6 +461,7 @@ class LiveAnalyzer:
             if not self.closed:
                 await self._send({"type": "analysis-status", "state": "error", "detail": "One analysis window failed. Analysis continues with the next audio."})
                 self._status = "error"
+        self._task = None  # this run is over, so the next window may start now rather than on the next audio frame
         if not self.closed:
             await self.maybe_start()
 

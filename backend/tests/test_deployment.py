@@ -160,3 +160,26 @@ class TestReadiness:
         response = TestClient(create_app()).get("/api/v1/ready")
         assert response.status_code == 200 and response.json()["status"] == "ready"
         get_services.cache_clear()
+
+
+class TestExtensionCors:
+    """The VoxShield Check extension's service worker sends Origin: chrome-extension://<32 letters a-p>."""
+
+    EXT = "chrome-extension://abcdefghijklmnopabcdefghijklmnop"
+
+    def ask(self, client, origin):
+        return client.options("/api/v1/deeptruth/analyze", headers={"origin": origin, "access-control-request-method": "POST"}).headers.get("access-control-allow-origin")
+
+    def test_extension_origins_are_allowed_by_default_alongside_the_listed_ones(self, monkeypatch):
+        client = app_with(monkeypatch, cors_origins=["http://localhost:5173"], cors_origin_regex=None, cors_allow_extensions=True)
+        assert self.ask(client, self.EXT) == self.EXT
+        assert self.ask(client, "http://localhost:5173") == "http://localhost:5173"
+        assert self.ask(client, "chrome-extension://short") is None
+        assert self.ask(client, "https://evil.example") is None
+
+    def test_extension_origins_can_be_switched_off_and_combine_with_a_custom_pattern(self, monkeypatch):
+        off = app_with(monkeypatch, cors_allow_extensions=False, cors_origin_regex=None)
+        assert self.ask(off, self.EXT) is None
+        both = app_with(monkeypatch, cors_allow_extensions=True, cors_origin_regex=r"https://voxshield-[a-z0-9-]+\.vercel\.app")
+        assert self.ask(both, self.EXT) == self.EXT
+        assert self.ask(both, "https://voxshield-x1.vercel.app") == "https://voxshield-x1.vercel.app"

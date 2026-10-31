@@ -108,6 +108,8 @@ export type ServerMessage =
   | { type: 'signal'; from: string; data: SignalData }
   | { type: 'analysis-status'; state: Exclude<AnalysisState, 'off' | 'waiting' | 'loading'>; detail: string }
   | AnalysisEvent
+  /** The last sentence before a pause, released once no later analysis will confirm it. */
+  | { type: 'transcript'; transcript: TranscriptLine[]; source_participant_id?: string | null }
   | { type: 'alert'; alert: LiveAlert }
   /** More evidence for an earlier alert, found while that tactic's cooldown ran. */
   | { type: 'alert-update'; alert_id: string; evidence: LiveEvidence[]; source_participant_id?: string | null }

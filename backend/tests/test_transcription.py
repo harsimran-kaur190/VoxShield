@@ -65,3 +65,12 @@ def test_transcription_error_does_not_invent_a_transcript():
     with pytest.raises(ComponentFailure) as info:
         transcriber(FakeWhisper([], error=RuntimeError("decode"))).transcribe(AUDIO)
     assert info.value.code == "transcription_failed"
+
+
+def test_hallucinated_scripts_marks_and_repeats_are_dropped():
+    from app.services.transcription import _drop_hallucinations
+
+    kept = [seg("Hello there, how are you"), seg("谢谢观看"), seg("..."), seg("ok"), seg("ok"), seg("ok")]
+    assert [s.text for s in _drop_hallucinations(kept, "en")] == ["Hello there, how are you"]
+    hindi = [seg("नमस्ते आप कैसे हैं"), seg("thanks for watching")]
+    assert len(_drop_hallucinations(hindi, "hi")) == 2  # Latin is allowed in a Hindi call

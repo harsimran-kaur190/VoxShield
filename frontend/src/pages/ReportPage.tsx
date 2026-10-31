@@ -1,6 +1,7 @@
 import { FileQuestion, History } from 'lucide-react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 
+import { DeepTruthResult } from '../components/deeptruth/DeepTruthResult'
 import { AnalysisReportDocument } from '../components/report/AnalysisReportDocument'
 import { LiveCallReportDocument } from '../components/report/LiveCallReportDocument'
 import { SimulationReportDocument } from '../components/report/SimulationReportDocument'
@@ -8,13 +9,17 @@ import { EmptyState } from '../components/ui/Feedback'
 import { buttonClass } from '../components/ui/styles'
 import { useHistory } from '../hooks/useHistory'
 import { DEMO_SCENARIOS } from '../lib/demoScenario'
-import { HISTORY_NOTICE, HISTORY_PATH } from '../lib/history'
+import { getEntry, HISTORY_NOTICE, HISTORY_PATH } from '../lib/history'
 
 /** One report from this tab's history, real or simulated, chosen by its ID in the URL. */
 export function ReportPage() {
   const { id } = useParams()
-  const entry = useHistory().find((item) => item.id === id) ?? null
+  useHistory() // re-render when History changes
+  const entry = getEntry(id)
+  const navigate = useNavigate()
 
+  // The file itself is never kept, so an image report reopens without its picture under the heatmaps.
+  if (entry?.kind === 'deeptruth') return <DeepTruthResult report={entry.report} file={null} onReset={() => navigate('/deeptruth')} />
   if (entry?.kind === 'analysis') return <AnalysisReportDocument entry={entry} />
   if (entry?.kind === 'live-call') return <LiveCallReportDocument entry={entry} />
   const scenario = entry?.kind === 'simulation' ? DEMO_SCENARIOS[entry.scenarioId] : undefined
